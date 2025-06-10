@@ -1,0 +1,17 @@
+.card-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.chart-card {
+    min-height: 300px;
+    margin-bottom: 20px;
+    /* khoảng cách giữa hai biểu đồ */
+}
