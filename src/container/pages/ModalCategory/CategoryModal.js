@@ -73,8 +73,9 @@ const CategoryModal = ({ isOpen, onClose, onSave, category }) => {
                         </select>
                     </div>
                     <div className="modal-actions">
-                        <button type="button" onClick={onClose}>Hủy</button>
-                        <button type="submit">Lưu</button>
+
+                        <button type="submit" class="btn btn-success">Success</button>
+                        <button type="button" onClick={onClose} class="btn btn-danger">Danger</button>
                     </div>
                 </form>
             </div>

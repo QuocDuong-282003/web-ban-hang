@@ -47,16 +47,37 @@
     justify-content: center;
 }
 
-.pagination button {
-    margin: 0 5px;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    background-color: #eee;
-    cursor: pointer;
-}
+
 
 .pagination button.active {
     background-color: #007bff;
     color: white;
+}
+
+.product-action-button {
+    padding: 4px 8px;
+    margin-right: 4px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.product-edit-button {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.product-delete-button {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.product-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+
 }

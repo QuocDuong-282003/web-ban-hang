@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     getAllCategories,
     createCategory,
@@ -16,7 +16,15 @@ const ListCategory = () => {
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentCategory, setCurrentCategory] = useState(null);
+    const categoryFilterFn = useCallback((category, searchTerm) => {
+        const name = category.name || '';
+        const description = category.description || '';
 
+        return (
+            name.toLowerCase().includes(searchTerm) ||
+            description.toLowerCase().includes(searchTerm)
+        );
+    }, []);
     const {
         items: displayedCategories,
         totalPage,
@@ -25,7 +33,7 @@ const ListCategory = () => {
         searchTerm,
         setSearchTerm,
         totalItems,
-    } = useClientSideSearch(allCategories, 10);
+    } = useClientSideSearch(allCategories, 10, categoryFilterFn);
 
     const fetchAllCategories = async () => {
         setIsLoading(true);

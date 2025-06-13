@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AddProductModal from '../Modal/AddProductModal';
 import EditProductModal from '../Modal/EditProductModal';
+import AssignDiscountModal from '../Modal/AssignDiscountModal';
+
 import { toast } from 'react-toastify';
 import './ProductTable.css';
-import { handleAddProduct, getAllProduct, handleUpdateProduct, handleDeleteProduct } from '../../services/userService';
+import { handleAddProduct, getAllProduct, handleUpdateProduct, handleDeleteProduct, assignDiscountsToProduct } from '../../services/userService';
 const ProductTable = () => {
   // State quản lý danh sách sản phẩm
   const [products, setProducts] = useState([]);
-
+  const [showAssignModal, setShowAssignModal] = useState(false);
   // Modal thêm/sửa sản phẩm
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -19,6 +21,27 @@ const ProductTable = () => {
   const [filteredProduct, setFilteredProduct] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 10;
+  const openAssignModal = (product) => {
+    setSelectedProduct(product);
+    setShowAssignModal(true);
+  };
+
+  const closeAssignModal = () => {
+    setShowAssignModal(false);
+    setSelectedProduct(null);
+  };
+
+  const handleAssignDiscounts = async (discountId) => {
+    if (!selectedProduct) return;
+    try {
+      await assignDiscountsToProduct(selectedProduct._id, discountId);
+      toast.success("Cập nhật mã giảm giá thành công!");
+      closeAssignModal();
+      fetchProducts(); // Tải lại dữ liệu để cập nhật cột "Áp dụng mã"
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Cập nhật thất bại!");
+    }
+  };
 
   // Hàm lấy danh sách sản phẩm từ server
   const fetchProducts = async () => {
@@ -133,11 +156,20 @@ const ProductTable = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+  // Hàm định dạng giá tiền
+  const formatPrice = (price) => {
+    if (typeof price !== 'number') {
+      return '0 ₫';
+    }
+    // Sử dụng toLocaleString cho định dạng dấu chấm ngăn cách hàng nghìn
+    return price.toLocaleString('vi-VN') + ' ₫';
+  };
 
   return (
+
     <div className="product-container">
       <h2>Danh sách sản phẩm</h2>
-      <button onClick={() => setShowAddModal(true)}>+ Thêm sản phẩm</button>
+      <button onClick={() => setShowAddModal(true)} className='product-button'>+ Thêm sản phẩm</button>
 
       <div className="top-bar">
         <h3 className="page-title">Tổng số bản ghi: {filteredProduct.length}</h3>
@@ -161,37 +193,67 @@ const ProductTable = () => {
             <th>Giá</th>
             <th>Tồn kho</th>
             <th>Danh mục</th>
+            <th>Áp dụng mã</th>
             <th>Hình ảnh</th>
             <th>Hành động</th>
           </tr>
         </thead>
 
         <tbody>
-          {currentProducts.map((product, index) => (
-            <tr key={product._id}>
-              <td>{indexOfFirstProduct + index + 1}</td>
-              <td>{product.name}</td>
-              <td>{product.description}</td>
-              <td>{product.price ? product.price.toLocaleString('vi-VN') : 0} VNĐ</td>
-              <td>{product.stock}</td>
-              <td>{product.category ? product.category.name : 'Không có'}</td>
-              <td>
-                {product.imageBase64 ? (
-                  <img
-                    src={product.imageBase64}
-                    alt={product.name}
-                    className="product-img"
-                  />
-                ) : (
-                  'Không có ảnh'
-                )}
-              </td>
-              <td>
-                <button onClick={() => { setSelectedProduct(product); setShowEditModal(true); }}>Sửa</button>
-                <button onClick={() => handleDelete(product._id)}>Xoá</button>
-              </td>
-            </tr>
-          ))}
+          {currentProducts.map((product, index) => {
+            const isSale = product.discountInfo && product.price > product.finalPrice;
+
+            return (
+              <tr key={product._id}>
+                <td>{indexOfFirstProduct + index + 1}</td>
+                <td>{product.name}</td>
+                <td>{product.description}</td>
+
+                {/* Cột Giá*/}
+                <td>
+                  {isSale ? (
+                    <div>
+                      <span style={{ color: 'red', fontWeight: 'bold' }}>
+                        {formatPrice(product.finalPrice)}
+                      </span>
+                      <div style={{ textDecoration: 'line-through', fontSize: '12px', color: '#888' }}>
+                        {formatPrice(product.price)}
+                      </div>
+                    </div>
+                  ) : (
+                    <span>{formatPrice(product.price)}</span>
+                  )}
+                </td>
+
+                <td>{product.stock}</td>
+                <td>{product.category ? product.category.name : 'Không có'}</td>
+
+                {/* Cột Áp dụng mã - Bây giờ sẽ hoạt động đúng */}
+                <td>
+                  {isSale ? `${product.discountInfo.code} (${product.discountInfo.description})` : 'Không'}
+                </td>
+
+                <td>
+                  {product.imageBase64 ? (
+                    <img
+                      src={product.imageBase64}
+                      alt={product.name}
+                      className="product-img"
+                    />
+                  ) : (
+                    'Không có ảnh'
+                  )}
+                </td>
+                <td>
+                  <button className="product-action-button product-edit-button"
+                    onClick={() => { setSelectedProduct(product); setShowEditModal(true); }}>Sửa</button>
+                  <button className="product-action-button" onClick={() => openAssignModal(product)}>Gán mã GG</button>
+                  <button className="product-action-button product-delete-button"
+                    onClick={() => handleDelete(product._id)}>Xoá</button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
@@ -219,6 +281,15 @@ const ProductTable = () => {
           product={selectedProduct}
           onSave={handleEdit}
           existingProducts={products}
+        />
+      )}
+      {/* RENDER MODAL MỚI */}
+      {selectedProduct && (
+        <AssignDiscountModal
+          isOpen={showAssignModal}
+          onClose={closeAssignModal}
+          onSave={handleAssignDiscounts}
+          product={selectedProduct}
         />
       )}
     </div>

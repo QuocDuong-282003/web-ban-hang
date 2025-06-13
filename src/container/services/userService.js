@@ -68,3 +68,23 @@ export const updateCategory = async (id, createCategoryData) => {
 export const deleteCategory = async (id) => {
     return API.delete(`/category/${id}`);
 }
+// discount
+export const getAllDiscounts = () => {
+    return API.get('/discount-all');
+}
+export const createDiscount = async (createDiscountData) => {
+    return API.post('/add-discount', createDiscountData);
+}
+export const updateDiscount = async (discountId, createDiscountData) => {
+    return API.put(`/discount/${discountId}`, createDiscountData);
+}
+export const deleteDiscount = async (discountId) => {
+    return API.delete(`/discount/${discountId}`);
+}
+// export const assignDiscountsToProduct = (productId, discountIds) => {
+//     return API.post(`/products/${productId}/assign-discounts`, { discountIds });
+// };
+export const assignDiscountsToProduct = (productId, discountId) => {
+
+    return API.post(`/products/${productId}/assign-discounts`, { discountId });
+};

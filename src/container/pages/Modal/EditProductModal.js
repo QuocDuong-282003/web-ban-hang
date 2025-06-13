@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getAllCategories } from '../../services/userService';
-import './EditProductModal.css';
+import './EditProductModal.scss';
 
-// *** THÊM GIÁ TRỊ MẶC ĐỊNH Ở ĐÂY ĐỂ PHÒNG THỦ ***
 const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts = [] }) => {
 
     const [formData, setFormData] = useState({
@@ -95,31 +94,32 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h3>Chỉnh sửa sản phẩm</h3>
-                <form onSubmit={handleSubmit}>
-                    <div>
+        <div className="edit-product-modal__overlay">
+            <div className="edit-product-modal__content">
+                <h3 className="edit-product-modal__title">Chỉnh sửa sản phẩm</h3>
+
+                <form onSubmit={handleSubmit} className="edit-product-modal__form">
+                    <div className="edit-product-modal__form-group">
                         <label>Tên sản phẩm:</label>
                         <input name="name" type="text" value={formData.name} onChange={handleChange} required />
                     </div>
-                    <div>
+                    <div className="edit-product-modal__form-group">
                         <label>Mô tả:</label>
                         <textarea name="description" value={formData.description} onChange={handleChange} required />
                     </div>
-                    <div>
+                    <div className="edit-product-modal__form-group">
                         <label>Giá:</label>
                         <input name="price" type="number" value={formData.price} onChange={handleChange} required />
                     </div>
-                    <div>
+                    <div className="edit-product-modal__form-group">
                         <label>Tồn kho:</label>
                         <input name="stock" type="number" value={formData.stock} onChange={handleChange} required />
                     </div>
-                    <div>
+                    <div className="edit-product-modal__form-group">
                         <label>Đã bán:</label>
                         <input name="sold" type="number" value={formData.sold} onChange={handleChange} required />
                     </div>
-                    <div>
+                    <div className="edit-product-modal__form-group">
                         <label>Danh mục:</label>
                         <select name="category" value={formData.category} onChange={handleChange} required>
                             <option value="" disabled>-- Chọn danh mục --</option>
@@ -129,26 +129,27 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
                         </select>
                     </div>
 
-                    <div style={{ marginTop: '15px' }}>
+                    <div className="edit-product-modal__form-group">
                         <label>Ảnh hiện tại:</label>
                         {product.imageBase64 ? (
-                            <img src={product.imageBase64} alt="Current product" style={{ width: '100px', height: '100px', objectFit: 'cover', display: 'block' }} />
+                            <img src={product.imageBase64} alt="Current product" className="edit-product-modal__image" />
                         ) : (
                             <p>Không có ảnh.</p>
                         )}
                     </div>
-                    <div>
+                    <div className="edit-product-modal__form-group">
                         <label>Chọn ảnh mới (nếu muốn thay thế):</label>
                         <input type="file" multiple accept="image/*" onChange={handleFileChange} />
                     </div>
 
-                    <div className="modal-buttons" style={{ marginTop: '20px' }}>
+                    <div className="edit-product-modal__buttons">
                         <button type="submit">Lưu thay đổi</button>
                         <button type="button" onClick={onClose}>Huỷ</button>
                     </div>
                 </form>
             </div>
         </div>
+
     );
 };
 
