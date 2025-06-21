@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { path } from './components/utils/constant';
 
 // Public Pages
+
 import HomePage from './pages/HomePage';
 import ProductPage from './pages/ProductPage';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -10,23 +11,25 @@ import NewsPage from './pages/NewsPage';
 import NewsDetailPage from './pages/NewsDetailPage';
 import CartPage from './pages/CartPage';
 import PayPage from './pages/PayPage';
-import LoginPage from './pages/LoginPage';
-import RegistrationPage from './pages/RegistrationPage';
+import LoginPage from './pages/authHeader/LoginPage';
+import RegistrationPage from './pages/authHeader/RegistrationPage';
 import IntroPage from './pages/IntroPage';
 import ContactPage from './pages/ContactPage';
 import ListLikePage from './pages/ListLikePage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import AccountManagementPage from './pages/AccountManagementPage';
+// import LoginPageUser from './components/authHeader/LoginPageUser';
+// import RegistrationPage from './components/authHeader/RegistrationPage';
 import { ToastContainer } from 'react-toastify';
 // Admin
 import AdminLayout from './container/AdminLayout';
 import Dashboard from './container/pages/Dashboard';
 import Profile from './container/pages/Profile';
-import Ecommerce from './container/pages/Ecommerce';
+import OrderTable from './container/pages/OrderTable';
 import User from './container/pages/User';
 import ListCategory from './container/pages/templates/ListCategory';
 import Extra from './container/pages/templates/Extra';
-import Forms from './container/pages/templates/Forms';
+import Review from './container/pages/templates/Review';
 import Grid from './container/pages/templates/Grid';
 import Maps from './container/pages/templates/Maps';
 import ProductTable from './container/pages/templates/ProductTable';
@@ -69,11 +72,11 @@ function App() {
 
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="profile" element={<Profile />} />
-                    <Route path="ecommerce" element={<Ecommerce />} />
+                    <Route path="order-table" element={<OrderTable />} />
                     <Route path="user" element={<User />} />
                     <Route path="template-category" element={<ListCategory />} />
                     <Route path="template-extra" element={<Extra />} />
-                    <Route path="template-forms" element={<Forms />} />
+                    <Route path="template-forms" element={<Review />} />
                     <Route path="template-grid" element={<Grid />} />
                     <Route path="template-maps" element={<Maps />} />
                     <Route path="template-product-tables" element={<ProductTable />} />

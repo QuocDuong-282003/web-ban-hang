@@ -154,7 +154,7 @@ const Sidebar = ({ isOpen }) => { // Receive isOpen as a prop
                     {/* Sử dụng hằng số path cho prop 'to' */}
                     <SidebarItem label="Profile" icon={<AccountCircle />} to={path.ADMIN_PROFILE} />
                     <SidebarItem label="Dashboard" icon={<DashboardIcon />} chipLabel="Admin" to={path.DASHBOARD} />
-                    <SidebarItem label="E-commerce" icon={<ShoppingCart />} to={path.ADMIN_ECOMMERCE_OVERVIEW} />
+                    <SidebarItem label="Order-Table" icon={<ShoppingCart />} to={path.ADMIN_ORDER_TABLE_OVERVIEW} />
                     <SidebarItem label="User" icon={<Person />} chipLabel="New" to={path.ADMIN_USER_OVERVIEW} />
                     {/* <SidebarItem label="Documentation" icon={<InsertDriveFile />} to="/some-documentation-path" />  */}
                     {/* Ví dụ: bạn cần thêm path cho Documentation nếu muốn nó điều hướng */}

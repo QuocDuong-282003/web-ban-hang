@@ -1,30 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Link, NavLink } from 'react-router-dom'; // Sử dụng NavLink để active class
-//import './Header.css'; // Tạo file CSS riêng cho Header nếu cần
+import React, { useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { userLogout } from '../../container/redux/userAuthSlice'; // Import action đăng xuất
+import { toast } from 'react-toastify';
 
 function Header() {
-    // Ví dụ state cho loggedIn (bạn sẽ quản lý cái này qua Context API hoặc Redux)
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // Mặc định là chưa đăng nhập
-    const [userName, setUserName] = useState("Huy Hùng"); // Tên người dùng ví dụ
+    // Lấy trạng thái đăng nhập (isAuthenticated) và thông tin user từ Redux
+    const { isAuthenticated, user } = useSelector(state => state.userAuth);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    // Logic cho mobile menu (nếu bạn chuyển từ main.js)
+    // State cho mobile menu
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
-    const toggleMobileMenu = () => {
-        setIsMobileMenuOpen(!isMobileMenuOpen);
-        // Cũng có thể thêm/xóa class 'hidden' cho overlay
-        const overlay = document.querySelector('.overlay');
-        if (overlay) {
-            overlay.classList.toggle('hidden', !isMobileMenuOpen);
-        }
+    // HÀM XỬ LÝ ĐĂNG XUẤT
+    const handleLogout = () => {
+
+        dispatch(userLogout());
+
+        toast.info("Bạn đã đăng xuất.");
+
+        navigate('/');
     };
-
-    // Giả sử bạn có một hàm để kiểm tra trạng thái đăng nhập
-    useEffect(() => {
-        // checkLoginStatus().then(status => setIsLoggedIn(status.loggedIn));
-        // Ví dụ: setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
-    }, []);
-
 
     return (
         <header className="header">
@@ -32,36 +30,44 @@ function Header() {
                 <div className="top-link clearfix hidden-sm hidden-xs">
                     <div className="row">
                         <div className="col-6 social_link">
+
                             <div className="social-title">Theo dõi: </div>
                             <a href="https://www.facebook.com/zeroryo25/" target="_blank" rel="noopener noreferrer"><i className="fab fa-facebook" style={{ fontSize: '24px', marginRight: '10px' }}></i></a>
-                            <a href="#instagram"><i className="fab fa-instagram" style={{ fontSize: '24px', marginRight: '10px', color: 'pink' }}></i></a>
-                            <a href="#youtube"><i className="fab fa-youtube" style={{ fontSize: '24px', marginRight: '10px', color: 'red' }}></i></a>
-                            <a href="#twitter"><i className="fab fa-twitter" style={{ fontSize: '24px', marginRight: '10px' }}></i></a>
                         </div>
                         <div className="col-6 login_link">
-                            {isLoggedIn ? (
+
+                            {isAuthenticated && user ? (
+                                // GIAO DIỆN KHI  ĐĂNG NHẬP
                                 <ul className="nav nav__first right">
                                     <li className="nav-item nav-item__first nav-item__first-user">
-                                        <img src="./assets/img/product/noavatar.png" alt="" className="nav-item__first-img" />
-                                        <span className="nav-item__first-name">{userName}</span>
+                                        <img src="/assets/img/product/noavatar.png" alt="" className="nav-item__first-img" />
+                                        <span className="nav-item__first-name">{user.name}</span>
+
+                                        {/* ĐÂY LÀ MENU DROPDOWN */}
                                         <ul className="nav-item__first-menu">
                                             <li className="nav-item__first-item">
                                                 <Link to="/account">Tài khoản của tôi</Link>
                                             </li>
                                             <li className="nav-item__first-item">
-                                                <Link to="/account/addresses">Địa chỉ của tôi</Link>
-                                            </li>
-                                            <li className="nav-item__first-item">
                                                 <Link to="/account/orders">Đơn mua</Link>
                                             </li>
+
+                                            {/* ===  NÚT ĐĂNG XUẤT === */}
                                             <li className="nav-item__first-item">
-                                                {/* <button onClick={handleLogout}>Đăng xuất</button> */}
-                                                <Link to="/logout">Đăng xuất</Link>
+                                                <button
+                                                    onClick={handleLogout}
+                                                    className="btn-logout"
+                                                    style={{ all: 'unset', cursor: 'pointer', width: '100%', padding: '5px 15px', textAlign: 'left', background: 'none', border: 'none', color: 'white' }}
+                                                >
+                                                    Đăng xuất
+                                                </button>
                                             </li>
+
                                         </ul>
                                     </li>
                                 </ul>
                             ) : (
+                                // GIAO DIỆN KHI CHƯA ĐĂNG NHẬP 
                                 <ul className="header_link right m-auto">
                                     <li>
                                         <Link to="/login"><i className="fas fa-sign-in-alt mr-3"></i>Đăng nhập</Link>
@@ -74,6 +80,7 @@ function Header() {
                         </div>
                     </div>
                 </div>
+
                 <div className="header-main clearfix">
                     <div className="row">
                         <div className="col-lg-3 col-100-h">
@@ -135,7 +142,7 @@ function Header() {
                                             <Link className="hmega" to="/products">Tất cả sản phẩm</Link>
                                         </li>
                                         <li className="level1">
-                                            <span className="hmega">Giày, dép</span> {/* Changed to span as it's a category title */}
+                                            <span className="hmega">Giày, dép</span>
                                             <ul className="level1">
                                                 <li className="level2"><Link to="/products?category=shoes&type=football">Bóng đá</Link></li>
                                                 <li className="level2"><Link to="/products?category=shoes&type=running">Chạy</Link></li>

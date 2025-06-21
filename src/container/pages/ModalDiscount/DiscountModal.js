@@ -33,7 +33,12 @@ const DiscountModal = ({ isOpen, onClose, onSave, discount }) => {
                     isActive: discount.isActive !== undefined ? discount.isActive : true,
                 });
             } else {
-                setFormData(INITIAL_STATE);
+                const today = new Date().toISOString().split('T')[0];
+                setFormData({
+                    ...INITIAL_STATE,
+                    startDate: today,
+                });
+
             }
         }
     }, [discount, isOpen]);
@@ -92,8 +97,8 @@ const DiscountModal = ({ isOpen, onClose, onSave, discount }) => {
                             value={formData.discountType}
                             onChange={handleChange}
                         >
-                            <option value="percentage">Phần trăm (%)</option>
-                            <option value="fixed_amount">Số tiền cố định (VND)</option>
+                            <option value="percent">Phần trăm (%)</option>
+                            <option value="fixed">Số tiền cố định (VND)</option>
                         </select>
                     </div>
 
@@ -114,9 +119,11 @@ const DiscountModal = ({ isOpen, onClose, onSave, discount }) => {
                             type="date"
                             name="startDate"
                             value={formData.startDate}
-                            onChange={handleChange}
+                            //onChange={handleChange}
+                            onChange={() => { }}
                             readOnly={!!discount}
-                            required
+                            required readonly
+                            disabled
                         />
                     </div>
 

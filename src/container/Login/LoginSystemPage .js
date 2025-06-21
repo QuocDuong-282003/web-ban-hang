@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { handleLoginApi, trackLogin } from '../services/userService';
-import { loginSuccess } from '../redux/authSlice';
-
+import { adminLoginSuccess } from '../redux/authSlice';
+//const jwt = require('jsonwebtoken');
 import './LoginSystemPage.css';
 const LoginSystemPage = () => {
     const [form, setForm] = useState({ email: '', password: '' });
@@ -41,21 +41,34 @@ const LoginSystemPage = () => {
         setError('');
 
         try {
+
             const res = await handleLoginApi(form.email, form.password);
-            const user = res.data.user;
 
-            if (user.role !== 'admin') {
-                return setError(' Chỉ tài khoản admin mới có quyền truy cập');
+
+            // Dùng destructuring để lấy ra cả user và token từ res.data
+            const { user, token } = res.data;
+            if (!user || user.role !== 'admin') {
+                return setError('Chỉ tài khoản admin mới có quyền truy cập');
             }
-            console.log("chekc user", user)
 
-            dispatch(loginSuccess(user));
-            localStorage.setItem('authUser', JSON.stringify(user)); // nếu cần
+
+            console.log("User đăng nhập:", user);
+            console.log("Nhận được Token:", token);
+
+            //  Lưu chuỗi token vào localStorage với key là "token"
+            localStorage.setItem('token', token);
+
+
+            //  dispatch(loginSuccess(user));
+            dispatch(adminLoginSuccess({ user, token }));
+            localStorage.setItem('authUser', JSON.stringify(user));
             await trackLogin(user.role);
-            // navigate('/system/dashboard');
+
+            // 7. Chuyển hướng
             navigate(from);
+
         } catch (err) {
-            const msg = err.response?.data?.message || 'Đăng nhập thất bại';
+            const msg = err.response?.data?.message || 'Email hoặc mật khẩu không đúng.';
             setError(msg);
         }
     };

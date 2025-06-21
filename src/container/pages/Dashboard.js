@@ -1,8 +1,11 @@
 import React from 'react';
 import DailyChart from '../char/DailyChart';
-import MonthlyChart from '../char/MonthlyChart';
+import DashboardPage from '../char/DashboardPage';
 import LoginPieChart from '../char/LoginPieChart';
 import LoginBarChart from '../char/LoginBarChart';
+import OverviewCards from '../char/orderChar/OverviewCards';
+import SalesChart from '../char/orderChar/SalesChart';
+import OrderStatusChart from '../char/orderChar/OrderStatusChart';
 const Dashboard = () => {
     return (
         <div className='container'>
@@ -13,21 +16,27 @@ const Dashboard = () => {
                             <h5>Thống kê đơn hàng theo ngày</h5>
                         </div>
                         <div className="card-body">
-                            <DailyChart />
+                            <OrderStatusChart />
+
                         </div>
                     </div>
                 </div>
+
                 <div className="col-md-6">
                     <div className="card">
                         <div className="card-header">
                             <h5>Thống kê đơn hàng theo tháng</h5>
                         </div>
                         <div className="card-body">
-                            <MonthlyChart />
+                            <SalesChart />
+                            <OverviewCards />
                         </div>
+
                     </div>
+
                 </div>
             </div>
+
             <div className="row">
                 <div className="col-md-6">
                     <div className="card">

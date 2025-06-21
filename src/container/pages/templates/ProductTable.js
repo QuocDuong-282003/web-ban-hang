@@ -94,24 +94,6 @@ const ProductTable = () => {
     }
   };
 
-
-  // const handleEdit = async (formData) => {
-  //   try {
-  //     const productID = formData.append('_id', product._id);
-  //     // Gọi hàm từ service
-  //     await handleUpdateProduct(productID, formData);
-
-  //     toast.success("Cập nhật sản phẩm thành công!");
-  //     setShowEditModal(false);
-  //     fetchProducts(); // Tải lại dữ liệu để thấy thay đổi
-  //   } catch (err) {
-  //     const errorMessage = err.response?.data?.message || "Cập nhật sản phẩm thất bại!";
-  //     toast.error(errorMessage);
-  //     throw err; // Ném lỗi để modal không tự đóng
-  //   }
-  // };
-
-
   const handleEdit = async (formData) => {
     // `selectedProduct` là sản phẩm đang được chọn để sửa, nó chứa ID.
     if (!selectedProduct || !selectedProduct._id) {

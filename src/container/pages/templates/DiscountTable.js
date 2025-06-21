@@ -38,7 +38,7 @@ const DiscountTable = () => {
 
     // Sử dụng hook để quản lý việc lọc và phân trang
     const {
-        items: displayedDiscounts, // << SỬA LỖI: Dùng biến này để render, không phải allDiscounts
+        items: displayedDiscounts,
         totalPage,
         currentPage,
         goToPage,
@@ -74,13 +74,13 @@ const DiscountTable = () => {
     // Hàm xử lý khi lưu (cả thêm mới và cập nhật)
     const handleSave = async (formData) => {
         console.log('check data discount', formData)
-        const isEditing = !!currentDiscount; // << SỬA LỖI LOGIC: `true` nếu currentDiscount có giá trị
+        const isEditing = !!currentDiscount;
 
         try {
             if (isEditing) {
                 await updateDiscount(currentDiscount._id, formData);
             } else {
-                await createDiscount(formData); // << SỬA LỖI: Gọi đúng hàm createDiscount
+                await createDiscount(formData);
             }
             toast.success(isEditing ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
             closeModal();
@@ -92,7 +92,7 @@ const DiscountTable = () => {
 
     // Hàm xử lý xóa
     const handleDelete = async (id) => {
-        if (!window.confirm("Bạn có chắc chắn muốn xóa mã giảm giá này không?")) return;
+
         try {
             await deleteDiscount(id);
             toast.success("Xóa thành công!");

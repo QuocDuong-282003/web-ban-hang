@@ -3,23 +3,30 @@ import axios from 'axios';
 import UserModal from '../pages/Modal/UserModal';
 import { toast } from 'react-toastify';
 import './User.css';
-
+import { getAllUsers, deleteUser } from '../services/userService';
 const UserList = () => {
     const [users, setUsers] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [searchItem, setSearchItem] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
     // const [searchKeyWord, setSearchKeyWord] = useState('');
     const USERS_PER_PAGE = 15;
 
     // Lấy danh sách user từ API
     const fetchUsers = async () => {
+        setIsLoading(true);
         try {
-            const res = await axios.get('http://localhost:5000/api/users');
+            // const res = await axios.get('http://localhost:5000/api/users');
+            const res = await getAllUsers();
             setUsers(res.data);
         } catch (err) {
             console.error('Lỗi khi lấy user:', err);
+            toast.error("Không thể tải danh sách người dùng.");
+        } finally {
+            setIsLoading(false);
+
         }
     };
 
@@ -35,12 +42,6 @@ const UserList = () => {
             user.email.toLowerCase().includes(keyword)
         );
     });
-    // lọc khi btn
-    // const handleSearch = () => {
-    //     setSearchItem(searchKeyWord);
-    //     setCurrentPage(1);// rest vè page đầu khi tìm kiếm
-    // }
-
     // Tính phân trang sau khi lọc
     const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
     const startIndex = (currentPage - 1) * USERS_PER_PAGE;
@@ -62,7 +63,8 @@ const UserList = () => {
     // Xác nhận xoá người dùng
     const handleConfirmDelete = async () => {
         try {
-            await axios.delete(`http://localhost:5000/api/users/${selectedUserId}`);
+            //await axios.delete(`http://localhost:5000/api/users/${selectedUserId}`);
+            await deleteUser(selectedUserId);
             const updated = users.filter(user => user._id !== selectedUserId);
             setUsers(updated);
 
