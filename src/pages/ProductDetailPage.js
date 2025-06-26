@@ -1,80 +1,161 @@
-import React, { Component, useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+// --- THAY THẾ TOÀN BỘ FILE: src/pages/ProductDetailPage/ProductDetailPage.js ---
+
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import MobileMenu from '../components/common/MobileMenu';
 import GoToTop from '../components/common/GoToTop';
-import ProductItem from '../components/product/ProductItem'; // Để hiển thị sản phẩm liên quan
+import ProductItem from '../components/product/ProductItem';
+import { getProductById, getRelatedProducts } from '../container/services/userService';
 
-import { apiProducts } from '../data/productsData'; // Import dữ liệu
+// Hàm render sao - Đặt ở ngoài component vì nó không phụ thuộc vào state/props
+const renderStars = (rating) => {
+    const stars = [];
+    const numericRating = typeof rating === 'number' ? rating : 0;
+    const fullStars = Math.floor(numericRating);
+    for (let i = 0; i < 5; i++) {
+        if (i < fullStars) {
+            stars.push(<i key={i} className="fas fa-star text-warning"></i>);
+        } else {
+            stars.push(<i key={i} className="far fa-star text-secondary"></i>);
+        }
+    }
+    return stars;
+};
 
 function ProductDetailPage() {
-    const { productId } = useParams(); // Lấy productId từ URL
+    const { productId } = useParams();
+    const navigate = useNavigate();
+
     const [product, setProduct] = useState(null);
     const [relatedProducts, setRelatedProducts] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [currentImage, setCurrentImage] = useState('');
     const [quantity, setQuantity] = useState(1);
-    const [selectedColor, setSelectedColor] = useState(null);
-    const [selectedSize, setSelectedSize] = useState(null);
+    const [selectedOption, setSelectedOption] = useState(null);
     const [showAddedToCartAlert, setShowAddedToCartAlert] = useState(false);
-
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
+        window.scrollTo(0, 0);
 
-        const foundProduct = apiProducts.find(p => p.id.toString() === productId);
-        setProduct(foundProduct);
-        if (foundProduct && foundProduct.img) {
-            setCurrentImage(foundProduct.img);
-            // Tìm sản phẩm liên quan (ví dụ: cùng category nhưng khác id)
-            const related = apiProducts.filter(
-                p => p.category === foundProduct.category && p.id.toString() !== productId
-            ).slice(0, 4); // Lấy 4 sản phẩm
-            setRelatedProducts(related);
-        }
+        const fetchProductData = async () => {
+            if (!productId) return;
+            setIsLoading(true);
+            try {
+                const [productRes, relatedRes] = await Promise.all([
+                    getProductById(productId),
+                    getRelatedProducts(productId)
+                ]);
 
+                if (productRes && productRes.data) {
+                    const productData = productRes.data;
+                    setProduct(productData);
+                    if (productData.images && productData.images.length > 0) {
+                        setCurrentImage(productData.images[0]);
+                    }
+                    if (productData.options && productData.options.length > 0) {
+                        setSelectedOption(productData.options[0]);
+                    } else {
+                        setSelectedOption(null);
+                    }
+                } else {
+                    setProduct(null);
+                    toast.error("Không tìm thấy sản phẩm.");
+                }
 
+                if (relatedRes && relatedRes.data) {
+                    setRelatedProducts(relatedRes.data);
+                }
+            } catch (error) {
+                console.error("Lỗi khi tải chi tiết sản phẩm:", error);
+                setProduct(null);
+                toast.error("Có lỗi xảy ra, không thể tải sản phẩm.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchProductData();
     }, [productId]);
 
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-
-    const handleImageClick = (imageSrc) => {
-        setCurrentImage(imageSrc);
-    };
+    const handleImageClick = (imageSrc) => setCurrentImage(imageSrc);
 
     const handleQuantityChange = (amount) => {
-        setQuantity(prev => Math.max(1, prev + amount));
+        setQuantity(prev => {
+            const newQuantity = prev + amount;
+            if (newQuantity < 1) return 1;
+            if (newQuantity > product.stock) {
+                toast.warn(`Chỉ còn ${product.stock} sản phẩm có sẵn.`);
+                return product.stock;
+            }
+            return newQuantity;
+        });
     };
-    const handleDirectQuantityInput = (e) => {
-        const value = parseInt(e.target.value);
-        if (!isNaN(value) && value >= 1) {
-            setQuantity(value);
-        } else if (e.target.value === "") { /* Allow empty for typing */ }
-    };
-
 
     const handleAddToCart = () => {
-        // Logic thêm vào giỏ hàng
-        console.log(`Added to cart: ${product.name}, Quantity: ${quantity}, Color: ${selectedColor}, Size: ${selectedSize}`);
+        if (!product || product.stock < 1) {
+            toast.warn("Sản phẩm đã hết hàng!");
+            return;
+        }
+        if (product.options && product.options.length > 0 && !selectedOption) {
+            toast.warn("Vui lòng chọn một phân loại.");
+            return;
+        }
+        console.log(`Đã thêm vào giỏ: ${product.name}, Tùy chọn: ${selectedOption}, Số lượng: ${quantity}`);
         setShowAddedToCartAlert(true);
-        const overlay = document.querySelector('.overlay1');
-        if (overlay) overlay.style.display = 'block';
-
-        setTimeout(() => {
-            setShowAddedToCartAlert(false);
-            if (overlay) overlay.style.display = 'none';
-        }, 7000);
     };
-    const closeCartAlert = () => {
-        setShowAddedToCartAlert(false);
-        const overlay = document.querySelector('.overlay1');
-        if (overlay) overlay.style.display = 'none';
+
+    const handleBuyNow = () => {
+        if (!product || product.stock < 1) {
+            toast.warn("Sản phẩm đã hết hàng!");
+            return;
+        }
+        if (product.options && product.options.length > 0 && !selectedOption) {
+            toast.warn("Vui lòng chọn một phân loại.");
+            return;
+        }
+
+        const itemToBuy = {
+            productId: product._id,
+            name: product.name,
+            price: product.finalPrice,
+            quantity: quantity,
+            image: currentImage,
+            option: selectedOption,
+        };
+
+        localStorage.setItem('buy_now_item', JSON.stringify([itemToBuy]));
+        navigate('/pay');
+    };
+
+    const closeCartAlert = () => setShowAddedToCartAlert(false);
+
+    // .   trạng thái loading
+    if (isLoading) {
+        return (
+            <div className="text-center p-5 vh-100 d-flex align-items-center justify-content-center">
+                <h3>Đang tải chi tiết sản phẩm...</h3>
+            </div>
+        );
     }
 
-
+    // . Hiển thị nếu không tìm thấy sản phẩm 
     if (!product) {
-        return <div>Sản phẩm không tìm thấy!</div>;
+        return (
+            <div className="text-center p-5 vh-100 d-flex align-items-center justify-content-center">
+                <h3>Sản phẩm không tồn tại hoặc đã bị xóa.</h3>
+            </div>
+        );
     }
+
+    // 3.  khi product đã có dữ liệu render giao diện chính
+    const displayRating = (product.rating || 0).toFixed(1);
+    const numReviews = product.numReviews || 0;
+    const soldCount = product.sold || 0;
 
     return (
         <div>
@@ -82,180 +163,156 @@ function ProductDetailPage() {
             <MobileMenu isOpen={isMobileMenuOpen} toggleMenu={toggleMobileMenu} />
             <Header />
 
-            <div className="container">
-                <div className="product__detail">
-                    <div className="row product__detail-row">
-                        <div className="col-lg-6 col-12 daonguoc">
-                            <div className="img-product">
-                                <ul className="all-img">
-                                    {product.gallery && product.gallery.map((imgSrc, index) => (
-                                        <li className="img-item" key={index}>
-                                            <img src={imgSrc} className="small-img" alt={`Thumbnail ${index + 1}`} onClick={() => handleImageClick(imgSrc)} />
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div id="main-img" style={{ cursor: 'pointer' }} >
-                                {/* Image zoom component sẽ thay thế img này */}
-                                <img src={currentImage} className="big-img" alt={product.name} id="img-main" />
-                                {product.oldPrice && product.price < product.oldPrice && (
-                                    <div className="sale-off sale-off-2">
-                                        <span className="sale-off-percent">{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%</span>
-                                        <span className="sale-off-label">GIẢM</span>
-                                    </div>
+            <div className="container my-4">
+                <nav aria-label="breadcrumb">
+                    <ol className="breadcrumb bg-light p-2 ">
+                        <li className="breadcrumb-item"><Link to="/">Trang chủ</Link></li>
+                        <li className="breadcrumb-item"><Link to="/products">Sản phẩm</Link></li>
+                        <li className="breadcrumb-item"><Link to={`/products?category=${product.category?._id}`}>{product.category?.name || 'Chưa phân loại'}</Link></li>
+                        <li className="breadcrumb-item active" aria-current="page">{product.name}</li>
+                    </ol>
+                </nav>
+
+                <div className="bg-white p-3 p-md-4">
+                    <div className="row">
+                        <div className="col-lg-5 col-md-5 mb-4 mb-md-0">
+                            <div className="main-image-container position-relative mb-3">
+                                <img
+                                    src={currentImage || '/assets/img/placeholder.png'}
+                                    alt={product.name}
+                                    className="img-fluid w-100"
+                                    style={{ height: '450px', objectFit: 'cover', border: '1px solid #eee' }}
+                                />
+                                {product.finalPrice < product.price && (
+                                    <span className="badge badge-danger position-absolute" style={{ top: '10px', left: '10px', fontSize: '14px', padding: '5px 8px' }}>
+                                        -{Math.round(((product.price - product.finalPrice) / product.price) * 100)}%
+                                    </span>
                                 )}
                             </div>
+                            {product.images && product.images.length > 1 && (
+                                <div className="d-flex flex-wrap">
+                                    {product.images.map((img, index) => (
+                                        <div key={index} className="p-1" style={{ flex: '0 0 20%' }}>
+                                            <img
+                                                src={img}
+                                                alt={`thumb ${index + 1}`}
+                                                className={`img-fluid w-100 cursor-pointer ${img === currentImage ? 'active-thumbnail' : ''}`}
+                                                onClick={() => handleImageClick(img)}
+                                                style={{ height: '80px', objectFit: 'cover' }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div className="col-lg-6 col-12">
-                            <div className="product__name">
-                                <h2>{product.name}</h2>
-                            </div>
-                            <div className="status-product">
-                                Trạng thái: <b>{product.inStock ? 'Còn hàng' : 'Hết hàng'}</b>
-                            </div>
-                            <div className="infor-oder">
-                                Loại sản phẩm: <b>{product.category || "Chưa rõ"}</b>
-                            </div>
-                            <div className="product__price">
-                                <h2>{product.price.toLocaleString('vi-VN')}đ</h2>
-                            </div>
-                            {product.oldPrice && (
-                                <div className="price-old">
-                                    Giá gốc:
-                                    <del>{product.oldPrice.toLocaleString('vi-VN')}đ</del>
-                                    <span className="discount">(-{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%)</span>
-                                </div>
-                            )}
 
-                            {/* Color Selector */}
-                            {product.colors && product.colors.length > 0 && (
-                                <div className="product__color d-flex" style={{ alignItems: 'center' }}>
-                                    <div className="title" style={{ fontSize: '16px', marginRight: '10px' }}>Màu:</div>
-                                    <div className="select-swap d-flex">
-                                        {product.colors.map(color => (
-                                            <div className="circlecheck" key={color.id}>
-                                                <input
-                                                    type="radio"
-                                                    id={`color-${color.id}`}
-                                                    name="selector-color"
-                                                    value={color.id}
-                                                    checked={selectedColor === color.id}
-                                                    onChange={() => setSelectedColor(color.id)}
-                                                />
-                                                <label htmlFor={`color-${color.id}`} style={{ backgroundColor: color.hex, border: selectedColor === color.id ? `2px solid #000` : `2px solid ${color.hex}` }}></label>
-                                                <div className="outer-circle"></div>
-                                            </div>
-                                        ))}
+                        <div className="col-lg-7 col-md-7">
+                            <div className="product-info">
+                                <h3 className="h4 font-weight-normal">
+                                    <span className="badge badge-danger mr-2">Yêu thích</span>
+                                    {product.name}
+                                </h3>
+
+                                <div className="d-flex align-items-center my-3 text-secondary small flex-wrap">
+                                    <span className="text-warning font-weight-bold mr-1">{displayRating}</span>
+                                    <span className="mr-2">{renderStars(product.rating)}</span>
+                                    <div className="border-left pl-2 mr-2"><span>{numReviews}</span> Đánh giá</div>
+                                    <div className="border-left pl-2"><span>{soldCount}</span> Đã bán</div>
+                                </div>
+
+                                <div className="bg-light p-3 my-3 d-flex align-items-center flex-wrap">
+                                    {product.finalPrice < product.price && <del className="text-muted mr-3">{product.price.toLocaleString('vi-VN')}đ</del>}
+                                    <h2 className="h2 mb-0 text-danger font-weight-bold">{product.finalPrice.toLocaleString('vi-VN')}đ</h2>
+                                </div>
+
+                                {product.options && product.options.length > 0 && (
+                                    <div className="d-flex flex-wrap align-items-center mb-3">
+                                        <div className="text-secondary mr-4" style={{ minWidth: '80px' }}>Phân loại</div>
+                                        <div className="d-flex flex-wrap">
+                                            {product.options.map(opt => (
+                                                <button
+                                                    key={opt}
+                                                    className={`btn btn-outline-secondary m-1 ${selectedOption === opt ? 'active-option' : ''}`}
+                                                    onClick={() => setSelectedOption(opt)}
+                                                >
+                                                    {opt}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {/* Size Selector */}
-                            {product.sizes && product.sizes.length > 0 && (
-                                <div className="product__size d-flex" style={{ alignItems: 'center' }}>
-                                    <div className="title" style={{ fontSize: '16px', marginRight: '10px' }}>Kích thước:</div>
-                                    <div className="select-swap">
-                                        {product.sizes.map(size => (
-                                            <div className="swatch-element" data-value={size.name} key={size.id}>
-                                                <input
-                                                    type="radio"
-                                                    className="variant-1"
-                                                    id={`swatch-size-${size.id}`}
-                                                    name="size-selector"
-                                                    value={size.id}
-                                                    checked={selectedSize === size.id}
-                                                    onChange={() => setSelectedSize(size.id)}
-                                                />
-                                                <label htmlFor={`swatch-size-${size.id}`} className={`sd ${selectedSize === size.id ? 'selected' : ''}`}><span>{size.name}</span></label>
-                                            </div>
-                                        ))}
+                                <div className="d-flex align-items-center my-4">
+                                    <div className="text-secondary mr-4" style={{ minWidth: '80px' }}>Số Lượng</div>
+                                    <div className="input-group" style={{ maxWidth: '150px' }}>
+                                        <div className="input-group-prepend">
+                                            <button className="btn btn-outline-secondary" type="button" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>-</button>
+                                        </div>
+                                        <input type="text" className="form-control text-center" value={quantity} readOnly />
+                                        <div className="input-group-append">
+                                            <button className="btn btn-outline-secondary" type="button" onClick={() => handleQuantityChange(1)} disabled={quantity >= product.stock}>+</button>
+                                        </div>
                                     </div>
+                                    <span className="ml-3 text-secondary small">{product.stock} sản phẩm có sẵn</span>
                                 </div>
-                            )}
 
-                            <div className="product__wrap">
-                                <div className="product__amount">
-                                    <label htmlFor="text_so_luong">Số lượng: </label>
-                                    <input type="button" value="-" className="control" onClick={() => handleQuantityChange(-1)} />
-                                    <input
-                                        type="text"
-                                        value={quantity}
-                                        className="text-input"
-                                        id="text_so_luong"
-                                        onChange={handleDirectQuantityInput}
-                                        onKeyPress={(event) => { if (!/[0-9]/.test(event.key)) { event.preventDefault(); } }}
-                                    />
-                                    <input type="button" value="+" className="control" onClick={() => handleQuantityChange(1)} />
+                                <div className="mt-4">
+                                    <button className="btn btn-lg btn-outline-danger mr-2" onClick={handleAddToCart} disabled={product.stock < 1}>
+                                        <i className="fas fa-cart-plus mr-2"></i>Thêm Vào Giỏ Hàng
+                                    </button>
+                                    <button className="btn btn-lg btn-danger" onClick={handleBuyNow} disabled={product.stock < 1}>
+                                        Mua Ngay
+                                    </button>
                                 </div>
-                                <button className="add-cart" onClick={handleAddToCart}>Thêm vào giỏ</button>
-                            </div>
-                            <div className="product__shopnow">
-                                <button className="shopnow" onClick={() => alert('Mua ngay')}>Mua ngay</button>
-                                <span className="home-product-item__like home-product-item__like--liked"> {/* Logic cho like */}
-                                    <i className="home-product-item__like-icon-empty far fa-heart" style={{ fontSize: '24px', marginTop: '7px' }}></i>
-                                    <i className="home-product-item__like-icon-fill fas fa-heart" style={{ fontSize: '24px', marginTop: '7px' }}></i>
-                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="product__describe">
-                <div className="container">
-                    <h2 className="product__describe-heading">Mô tả</h2>
-                    <div className="row">
-                        <div className="col-1 d-none d-md-block"></div> {/* For spacing on larger screens */}
-                        <div className="col-md-11 col-12">
-                            <h3 className="name__product">{product.name}</h3>
-                            <div dangerouslySetInnerHTML={{ __html: product.fullDescription || "Chưa có mô tả chi tiết." }}></div>
-                        </div>
-                    </div>
+            <div className="container my-4">
+                <div className="bg-white p-4">
+                    <h5 className="font-weight-bold text-uppercase text-secondary p-3 bg-light mb-3">Mô tả sản phẩm</h5>
+                    <p className="text-secondary">{product.description || "Chưa có mô tả chi tiết."}</p>
                 </div>
             </div>
 
-            {/* Comment Section - Sẽ cần state và logic để xử lý comment */}
-            <div className="product__comment">
-                {/* ... (Code bình luận như trong HTML gốc, nhưng sẽ cần state và logic) ... */}
-            </div>
-
-            {/* Related Products */}
-            {relatedProducts.length > 0 && (
-                <div className="product__relateto">
-                    <div className="container">
-                        <h3 className="product__relateto-heading">Sản phẩm liên quan</h3>
-                        <div className="row">
-                            {relatedProducts.map(rp => (
-                                <ProductItem key={rp.id} product={rp} onQuickView={() => { }} /> // onQuickView có thể không cần ở đây
-                            ))}
-                        </div>
-                        <div className="seemore">
-                            <Link to="/products">Xem thêm</Link>
-                        </div>
+            {relatedProducts && relatedProducts.length > 0 && (
+                <div className="container my-4">
+                    <h5 className="font-weight-bold text-uppercase">Sản phẩm tương tự</h5>
+                    <div className="row mt-3">
+                        {relatedProducts.map(rp => (
+                            <div className="col-lg-3 col-md-4 col-6 mb-4" key={rp._id}>
+                                <ProductItem product={rp} />
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
 
-            {/* Alert Cart Modal */}
             {showAddedToCartAlert && product && (
-                <div id="alert-cart" className="alert" style={{ display: 'block' }}>
-                    <div className="alert__heading">
-                        <h4>Thêm vào giỏ hàng</h4>
+                <div id="alert-cart" className="alert alert-light position-fixed" style={{ top: '20px', right: '20px', zIndex: 1050, minWidth: '300px', boxShadow: '0 0.5rem 1rem rgba(0,0,0,.15)' }}>
+                    <div className="alert-heading d-flex justify-content-between align-items-center">
+                        <h4 className="h6 mb-0">Thêm vào giỏ hàng thành công!</h4>
+                        <button type="button" className="close" onClick={closeCartAlert}><span>×</span></button>
                     </div>
-                    <div className="alert__body">
-                        <img src={product.img} alt={product.name} className="alert__body-img" />
+                    <hr />
+                    <div className="alert-body d-flex">
+                        <img src={currentImage} alt={product.name} className="img-fluid mr-3" style={{ width: '60px', height: '60px', objectFit: 'cover' }} />
                         <div>
-                            <h5 className="alert__body-name">{product.name}</h5>
-                            <span className="alert__body-amount">Số lượng: {quantity}</span>
-                            <h6 className="alert__body-price">{(product.price * quantity).toLocaleString('vi-VN')} VNĐ</h6>
+                            <h5 className="h6 font-weight-bold mb-1">{product.name}</h5>
+                            <span className="d-block small text-muted">Phân loại: {selectedOption}</span>
+                            <span className="d-block small text-muted">Số lượng: {quantity}</span>
                         </div>
                     </div>
-                    <div className="alert__footer">
-                        <Link to="/cart" className="click__cart" style={{ borderRadius: '4px' }} onClick={closeCartAlert}>Xem giỏ hàng</Link>
+                    <hr />
+                    <div className="alert-footer text-right">
+                        <Link to="/cart" className="btn btn-danger" onClick={closeCartAlert}>Xem giỏ hàng</Link>
                     </div>
                 </div>
             )}
-            <div className="overlay1" style={{ display: showAddedToCartAlert ? 'block' : 'none' }} onClick={closeCartAlert}></div>
+
+            <div className={`overlay ${showAddedToCartAlert ? 'd-block' : 'd-none'}`} onClick={closeCartAlert} style={{ zIndex: 1040 }}></div>
 
 
             <Footer />

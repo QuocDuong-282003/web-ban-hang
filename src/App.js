@@ -4,11 +4,11 @@ import { path } from './components/utils/constant';
 
 // Public Pages
 
-import HomePage from './pages/HomePage';
+import HomePage from './pages/HomePage/HomePage';
 import ProductPage from './pages/ProductPage';
 import ProductDetailPage from './pages/ProductDetailPage';
-import NewsPage from './pages/NewsPage';
-import NewsDetailPage from './pages/NewsDetailPage';
+import NewsPage from './components/news/NewsPage';
+import NewsDetailPage from './components/news/NewsDetailPage';
 import CartPage from './pages/CartPage';
 import PayPage from './pages/PayPage';
 import LoginPage from './pages/authHeader/LoginPage';
@@ -17,7 +17,7 @@ import IntroPage from './pages/IntroPage';
 import ContactPage from './pages/ContactPage';
 import ListLikePage from './pages/ListLikePage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
-import AccountManagementPage from './pages/AccountManagementPage';
+import AccountManagementPage from './pages/Account/AccountManagementPage';
 // import LoginPageUser from './components/authHeader/LoginPageUser';
 // import RegistrationPage from './components/authHeader/RegistrationPage';
 import { ToastContainer } from 'react-toastify';
@@ -34,6 +34,7 @@ import Grid from './container/pages/templates/Grid';
 import Maps from './container/pages/templates/Maps';
 import ProductTable from './container/pages/templates/ProductTable';
 import DiscountTables from './container/pages/templates/DiscountTable';
+import News from './container/pages/templates/News';
 //
 import ProtectedRoute from './container/Router/ProtectedRoute';
 import LoginSystemPage from './container/Login/LoginSystemPage ';
@@ -69,12 +70,12 @@ function App() {
                     </ProtectedRoute>
 
                 }>
-
                     <Route path="dashboard" element={<Dashboard />} />
                     <Route path="profile" element={<Profile />} />
                     <Route path="order-table" element={<OrderTable />} />
                     <Route path="user" element={<User />} />
                     <Route path="template-category" element={<ListCategory />} />
+                    <Route path="template-news" element={<News />} />
                     <Route path="template-extra" element={<Extra />} />
                     <Route path="template-forms" element={<Review />} />
                     <Route path="template-grid" element={<Grid />} />
@@ -91,7 +92,7 @@ function App() {
                 <Route path="*" element={<div>404 | Page Not Found</div>} />
             </Routes>
             <ToastContainer
-                position="bottom-right"
+                position="top-right"
                 autoClose={5000}
                 hideProgressBar={false}
                 newestOnTop={false}

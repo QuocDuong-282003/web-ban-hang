@@ -3,14 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 
-import Header from '../components/common/Header';
-import Footer from '../components/common/Footer';
-import MobileMenu from '../components/common/MobileMenu';
-import GoToTop from '../components/common/GoToTop';
-import OrderItem from '../components/account/OrderItem';
+import Header from '../../components/common/Header';
+import Footer from '../../components/common/Footer';
+import MobileMenu from '../../components/common/MobileMenu';
+import GoToTop from '../../components/common/GoToTop';
+import OrderItem from '../../components/account/OrderItem';
 
-import { updateUserProfile, changeUserPassword } from '../container/services/userService';
-import { userLoginSuccess } from '../container/redux/userAuthSlice';
+import { updateUserProfile, changeUserPassword } from '../../container/services/userService';
+import { userLoginSuccess } from '../../container/redux/userAuthSlice';
 
 function AccountManagementPage() {
     const { user } = useSelector(state => state.userAuth);

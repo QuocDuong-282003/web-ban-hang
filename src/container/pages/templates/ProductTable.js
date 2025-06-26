@@ -1,5 +1,6 @@
+// --- THAY THẾ TOÀN BỘ FILE: src/components/Product/ProductTable.js ---
+
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import AddProductModal from '../Modal/AddProductModal';
 import EditProductModal from '../Modal/EditProductModal';
 import AssignDiscountModal from '../Modal/AssignDiscountModal';
@@ -7,6 +8,7 @@ import AssignDiscountModal from '../Modal/AssignDiscountModal';
 import { toast } from 'react-toastify';
 import './ProductTable.css';
 import { handleAddProduct, getAllProduct, handleUpdateProduct, handleDeleteProduct, assignDiscountsToProduct } from '../../services/userService';
+
 const ProductTable = () => {
   // State quản lý danh sách sản phẩm
   const [products, setProducts] = useState([]);
@@ -21,6 +23,7 @@ const ProductTable = () => {
   const [filteredProduct, setFilteredProduct] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 10;
+
   const openAssignModal = (product) => {
     setSelectedProduct(product);
     setShowAssignModal(true);
@@ -37,17 +40,15 @@ const ProductTable = () => {
       await assignDiscountsToProduct(selectedProduct._id, discountId);
       toast.success("Cập nhật mã giảm giá thành công!");
       closeAssignModal();
-      fetchProducts(); // Tải lại dữ liệu để cập nhật cột "Áp dụng mã"
+      fetchProducts();
     } catch (err) {
       toast.error(err.response?.data?.message || "Cập nhật thất bại!");
     }
   };
 
-  // Hàm lấy danh sách sản phẩm từ server
   const fetchProducts = async () => {
     try {
       const res = await getAllProduct();
-      console.log("Dữ liệu sản phẩm nhận được: ", res.data);
       setProducts(res.data);
     } catch (err) {
       console.error('Lỗi khi lấy danh sách sản phẩm:', err);
@@ -55,20 +56,22 @@ const ProductTable = () => {
     }
   };
 
-  // Hàm xử lý thêm sản phẩm mới
   const handleAdd = async (formData) => {
     try {
-      const res = await handleAddProduct(formData);
+
+      await handleAddProduct(formData);
+
+      toast.success("Thêm sản phẩm thành công!");
+      setShowAddModal(false); // Đóng modal
       fetchProducts(); // Làm mới danh sách
-      return res;
     } catch (err) {
-      console.error('Lỗi khi thêm sản phẩm:', err);
-      toast.error("Lỗi khi thêm sản phẩm");
-      throw err;
+      // Bắt lỗi và hiển thị toast
+      const errorMessage = err.response?.data?.message || "Lỗi khi thêm sản phẩm";
+      toast.error(errorMessage);
+      throw err; // Ném lỗi lại để component con có thể biết là đã thất bại
     }
   };
 
-  // Lọc sản phẩm khi có tìm kiếm hoặc khi danh sách thay đổi
   useEffect(() => {
     const lowercasedFilter = searchItem.toLowerCase();
     const filtered = products.filter(product => {
@@ -78,16 +81,14 @@ const ProductTable = () => {
       );
     });
     setFilteredProduct(filtered);
-    setCurrentPage(1); // Reset về trang đầu khi tìm kiếm
+    setCurrentPage(1);
   }, [searchItem, products]);
 
-  // Phân trang: xác định sản phẩm hiển thị theo trang
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const currentProducts = filteredProduct.slice(indexOfFirstProduct, indexOfLastProduct);
   const totalPages = Math.ceil(filteredProduct.length / productsPerPage);
 
-  // Hàm chuyển trang
   const paginate = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
@@ -95,60 +96,47 @@ const ProductTable = () => {
   };
 
   const handleEdit = async (formData) => {
-    // `selectedProduct` là sản phẩm đang được chọn để sửa, nó chứa ID.
     if (!selectedProduct || !selectedProduct._id) {
       toast.error("Không tìm thấy sản phẩm để cập nhật!");
       return;
     }
-
     try {
-
       const productID = selectedProduct._id;
-
-
       await handleUpdateProduct(productID, formData);
-
       toast.success("Cập nhật sản phẩm thành công!");
       setShowEditModal(false);
-      setSelectedProduct(null); // Reset sản phẩm đã chọn
-      fetchProducts(); // Tải lại dữ liệu để thấy thay đổi
-
+      setSelectedProduct(null);
+      fetchProducts();
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Cập nhật sản phẩm thất bại!";
       toast.error(errorMessage);
-
+      throw err; // Ném lỗi lại để modal biết và không tự đóng
     }
   };
 
-  // 
   const handleDelete = async (id) => {
-
-    try {
-      // Gọi hàm từ service
-      await handleDeleteProduct(id);
-      toast.success("Đã xóa sản phẩm thành công!");
-      fetchProducts();
-    } catch (err) {
-      toast.error("Xóa sản phẩm thất bại!");
+    // Thêm confirm dialog để an toàn hơn
+    if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')) {
+      try {
+        await handleDeleteProduct(id);
+        toast.success("Đã xóa sản phẩm thành công!");
+        fetchProducts();
+      } catch (err) {
+        toast.error("Xóa sản phẩm thất bại!");
+      }
     }
-
   };
 
-  // Tải danh sách khi component mount
   useEffect(() => {
     fetchProducts();
   }, []);
-  // Hàm định dạng giá tiền
+
   const formatPrice = (price) => {
-    if (typeof price !== 'number') {
-      return '0 ₫';
-    }
-    // Sử dụng toLocaleString cho định dạng dấu chấm ngăn cách hàng nghìn
+    if (typeof price !== 'number') return '0 ₫';
     return price.toLocaleString('vi-VN') + ' ₫';
   };
 
   return (
-
     <div className="product-container">
       <h2>Danh sách sản phẩm</h2>
       <button onClick={() => setShowAddModal(true)} className='product-button'>+ Thêm sản phẩm</button>
@@ -171,7 +159,8 @@ const ProductTable = () => {
           <tr>
             <th>STT</th>
             <th>Tên</th>
-            <th>Mô tả</th>
+            {/* SỬA Ở ĐÂY: Thêm cột "Tùy chọn" */}
+            <th>Tùy chọn</th>
             <th>Giá</th>
             <th>Tồn kho</th>
             <th>Danh mục</th>
@@ -189,9 +178,20 @@ const ProductTable = () => {
               <tr key={product._id}>
                 <td>{indexOfFirstProduct + index + 1}</td>
                 <td>{product.name}</td>
-                <td>{product.description}</td>
 
-                {/* Cột Giá*/}
+                {/* SỬA Ở ĐÂY: Thêm ô dữ liệu cho cột "Tùy chọn" */}
+                <td>
+                  {product.options && product.options.length > 0 ? (
+                    <ul className="options-list">
+                      {product.options.map((option, i) => (
+                        <li key={i}>{option}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    'Không có'
+                  )}
+                </td>
+
                 <td>
                   {isSale ? (
                     <div>
@@ -210,22 +210,18 @@ const ProductTable = () => {
                 <td>{product.stock}</td>
                 <td>{product.category ? product.category.name : 'Không có'}</td>
 
-                {/* Cột Áp dụng mã - Bây giờ sẽ hoạt động đúng */}
                 <td>
                   {isSale ? `${product.discountInfo.code} (${product.discountInfo.description})` : 'Không'}
                 </td>
 
                 <td>
                   {product.imageBase64 ? (
-                    <img
-                      src={product.imageBase64}
-                      alt={product.name}
-                      className="product-img"
-                    />
+                    <img src={product.imageBase64} alt={product.name} className="product-img" />
                   ) : (
                     'Không có ảnh'
                   )}
                 </td>
+
                 <td>
                   <button className="product-action-button product-edit-button"
                     onClick={() => { setSelectedProduct(product); setShowEditModal(true); }}>Sửa</button>
@@ -239,7 +235,6 @@ const ProductTable = () => {
         </tbody>
       </table>
 
-      {/* Phân trang */}
       <div className="pagination">
         {Array.from({ length: totalPages }, (_, i) => (
           <button
@@ -252,10 +247,12 @@ const ProductTable = () => {
         ))}
       </div>
 
-      {/* Modal Thêm */}
-      <AddProductModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSave={handleAdd} />
+      <AddProductModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={handleAdd}
+      />
 
-      {/* Modal Sửa */}
       {selectedProduct && (
         <EditProductModal
           isOpen={showEditModal}
@@ -265,7 +262,7 @@ const ProductTable = () => {
           existingProducts={products}
         />
       )}
-      {/* RENDER MODAL MỚI */}
+
       {selectedProduct && (
         <AssignDiscountModal
           isOpen={showAssignModal}

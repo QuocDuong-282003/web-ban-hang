@@ -6,7 +6,7 @@ export const path = {
     PRODUCTS: '/products',
     PRODUCT_DETAIL: '/product-detail/:productId',
     NEWS: '/news',
-    NEWS_DETAIL: '/news-detail/:newsId',
+    NEWS_DETAIL: '/news-detail/:slug',
     CART: '/cart',
     PAY: '/pay',
 
@@ -67,7 +67,7 @@ export const path = {
     TEMPLATE_TABLES: '/system/template-product-tables',
     TEMPLATE_DISCOUNT: '/system/template-discount',
     TEMPLATE_FORMS: '/system/template-forms',
-    TEMPLATE_CHARTS: '/system/template-charts',
+    TEMPLATE_NEWS: '/system/template-news',
     TEMPLATE_GRID: '/system/template-grid',
     TEMPLATE_MAPS: '/system/template-maps',
     TEMPLATE_EXTRA: '/system/template-extra',

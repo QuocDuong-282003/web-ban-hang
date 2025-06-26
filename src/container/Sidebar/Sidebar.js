@@ -196,8 +196,8 @@ const Sidebar = ({ isOpen }) => { // Receive isOpen as a prop
                     <SidebarItem label="ListCategory" icon={<ViewModule />} to={path.TEMPLATE_CATEGORY} />
                     <SidebarItem label="ProductTables" icon={<TableChart />} to={path.TEMPLATE_TABLES} />
                     <SidebarItem label="DiscountTables" icon={<Widgets />} to={path.TEMPLATE_DISCOUNT} />
-                    <SidebarItem label="Forms" icon={<Description />} to={path.TEMPLATE_FORMS} />
-                    <SidebarItem label="Charts" icon={<BarChart />} to={path.TEMPLATE_CHARTS} />
+                    <SidebarItem label="Reviews" icon={<Description />} to={path.TEMPLATE_FORMS} />
+                    <SidebarItem label="News" icon={<BarChart />} to={path.TEMPLATE_NEWS} />
                     <SidebarItem label="Grid" icon={<ViewComfy />} to={path.TEMPLATE_GRID} />
                     <SidebarItem label="Maps" icon={<Map />} to={path.TEMPLATE_MAPS} />
                     <SidebarItem label="Extra" icon={<Star />} to={path.TEMPLATE_EXTRA} />

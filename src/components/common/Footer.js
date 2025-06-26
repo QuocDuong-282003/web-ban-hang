@@ -129,7 +129,7 @@ function Footer() {
             </div>
 
             <div className="footer__bottom bg-dark text-white text-center py-3 mt-4">
-                <p className="mb-0">© Bản quyền thuộc về ABC</p>
+                <p className="mb-0">© Bản quyền thuộc về Quốc Dương</p>
             </div>
         </footer>
     );

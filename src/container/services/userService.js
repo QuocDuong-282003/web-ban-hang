@@ -142,3 +142,18 @@ export const changeUserPassword = (passwordData) => {
         headers: getAuthHeaders()
     });
 };
+
+
+// --- BỔ SUNG VÀO FILE: src/services/userService.js ---
+
+// ... các hàm cũ ...
+// -- Home Page Products --
+export const getNewestProducts = () => API.get('/products/newest');
+export const getHotProducts = () => API.get('/products/hot');
+export const getPopularProducts = () => API.get('/products/popular');
+export const getYouMayLikeProducts = () => API.get('/products/newest?limit=4');
+
+// -- Product Detail Page --
+export const getProductById = (productId) => API.get(`/product/${productId}`);
+export const getRelatedProducts = (productId) => API.get(`/products/related/${productId}`);
+export const getProductBySlug = (slug) => API.get(`/products/slug/${slug}`);
