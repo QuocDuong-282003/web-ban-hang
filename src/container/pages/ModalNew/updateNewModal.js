@@ -3,16 +3,15 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { uploadContentImage } from '../../services/userNews';
 
-// 1. Import các thư viện mới
 import MarkdownIt from 'markdown-it';
 import MdEditor from 'react-markdown-editor-lite';
-// Import CSS của editor
 import 'react-markdown-editor-lite/lib/index.css';
 
 import './updateNewModal.css';
 
-// 2. Khởi tạo parser Markdown
+//  Khởi tạo parser Markdown
 const mdParser = new MarkdownIt();
 
 const UpdateNewModal = ({ isOpen, onClose, onSave, newsItem }) => {
@@ -30,7 +29,7 @@ const UpdateNewModal = ({ isOpen, onClose, onSave, newsItem }) => {
             setformData({
                 title: newsItem.title || '',
                 excerpt: newsItem.excerpt || '',
-                content: newsItem.content || '', // Quan trọng: Gán giá trị content vào state
+                content: newsItem.content || '',
                 author: newsItem.author || '',
                 status: newsItem.status || 'published',
             });
@@ -45,21 +44,26 @@ const UpdateNewModal = ({ isOpen, onClose, onSave, newsItem }) => {
         setformData(prev => ({ ...prev, [name]: value }));
     };
 
-    // 3. Hàm xử lý thay đổi nội dung từ editor
-    const handleEditorChange = ({ text }) => {
+    const handleEditorChange = ({ html, text }) => {
         setformData(prev => ({ ...prev, content: text }));
     };
 
-    // 4. Hàm để xử lý việc upload ảnh trong nội dung bài viết (y hệt như trong AddNewModal)
     async function onImageUpload(file) {
-        const body = new FormData();
-        body.append('image', file);
         try {
-            const response = await axios.post('http://localhost:5000/api/upload/image', body);
-            return response.data.url;
+            const response = await uploadContentImage(file);
+
+            if (response && response.data && response.data.url) {
+                console.log('Server returned URL:', response.data.url);
+
+                return response.data.url;
+            } else {
+                toast.error("Server không trả về URL hợp lệ.");
+                return Promise.reject("Invalid URL from server");
+            }
+
         } catch (error) {
-            toast.error("Tải ảnh trong bài viết thất bại!");
-            console.error("Upload failed", error);
+            console.error("Lỗi khi upload ảnh:", error.response?.data || error.message);
+            toast.error("Tải ảnh thất bại!");
             return Promise.reject(error);
         }
     }
@@ -89,7 +93,6 @@ const UpdateNewModal = ({ isOpen, onClose, onSave, newsItem }) => {
                     </div>
                     <div className="form-group">
                         <label>Nội dung</label>
-                        {/* 5. Thay thế SimpleMDE bằng MdEditor, truyền 'value' cho nó */}
                         <MdEditor
                             style={{ height: '400px' }}
                             value={formData.content}

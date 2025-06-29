@@ -8,14 +8,13 @@ import './DiscountTable.scss';
 import { useClientSideSearch } from "../../hooks/useClientSideSearch";
 import {
     getAllDiscounts,
-    createDiscount, // Import hàm tạo discount
+    createDiscount,
     updateDiscount,
     deleteDiscount
 } from '../../services/userService';
 import DiscountModal from "../ModalDiscount/DiscountModal"; // Import modal
 
 
-//  ĐỊNH NGHĨA HÀM LỌC TÁCH BIỆT
 
 const discountFilterFn = (discount, searchTerm) => {
     const code = discount.code || '';
@@ -30,13 +29,12 @@ const discountFilterFn = (discount, searchTerm) => {
     );
 };
 
-// 3. COMPONENT CHÍNH
 const DiscountTable = () => {
-    // === PHẦN STATE VÀ HOOKS ===
+    // ===  STATE VÀ HOOKS ===
     const [allDiscounts, setAllDiscounts] = useState([]); // Lưu trữ toàn bộ dữ liệu gốc
     const [isLoading, setIsLoading] = useState(false);
 
-    // Sử dụng hook để quản lý việc lọc và phân trang
+    // hook để quản lý việc lọc và phân trang
     const {
         items: displayedDiscounts,
         totalPage,
@@ -51,9 +49,9 @@ const DiscountTable = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentDiscount, setCurrentDiscount] = useState(null);
 
-    // === PHẦN LOGIC (HÀM) ===
 
-    // Dùng useCallback để tránh việc hàm bị tạo lại, gây lặp vô hạn trong useEffect
+
+    //  useCallback để tránh việc hàm bị tạo lại, gây lặp vô hạn trong useEffect
     const fetchAllDiscounts = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -64,14 +62,13 @@ const DiscountTable = () => {
         } finally {
             setIsLoading(false);
         }
-    }, []); // Mảng rỗng nghĩa là hàm này chỉ được tạo 1 lần
+    }, []);
 
-    // Gọi API để lấy dữ liệu khi component được mount
     useEffect(() => {
         fetchAllDiscounts();
     }, [fetchAllDiscounts]);
 
-    // Hàm xử lý khi lưu (cả thêm mới và cập nhật)
+
     const handleSave = async (formData) => {
         console.log('check data discount', formData)
         const isEditing = !!currentDiscount;
@@ -84,7 +81,7 @@ const DiscountTable = () => {
             }
             toast.success(isEditing ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
             closeModal();
-            fetchAllDiscounts(); // Tải lại toàn bộ dữ liệu sau khi thành công
+            fetchAllDiscounts();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Lưu thất bại!');
         }

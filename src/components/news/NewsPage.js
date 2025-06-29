@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 
-// Import các component layout chung
 import Header from '../common/Header';
 import Footer from '../common/Footer';
 import MobileMenu from '../common/MobileMenu';
 import GoToTop from '../common/GoToTop';
 
-// Import hàm API
 import { getAllNewClient } from '../../container/services/userNews';
 
-// BƯỚC 1: IMPORT COMPONENT CON `NewsItem`
 import NewsItem from './NewsItem';
 
 function NewsPage() {

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { uploadContentImage } from '../../services/userNews';
 
 // 1. Import các thư viện mới
 import MarkdownIt from 'markdown-it';
@@ -33,7 +34,7 @@ const AddNewModal = ({ isOpen, onClose, onSave }) => {
     };
 
     // 3. Hàm xử lý thay đổi nội dung từ editor
-    function handleEditorChange({ text }) {
+    function handleEditorChange({ html, text }) {
         // Chúng ta chỉ cần lưu lại văn bản Markdown thô
         setFormData(prev => ({ ...prev, content: text }));
     }
@@ -46,20 +47,30 @@ const AddNewModal = ({ isOpen, onClose, onSave }) => {
 
     // 4. Hàm để xử lý việc upload ảnh trong nội dung bài viết
     async function onImageUpload(file) {
-        const body = new FormData();
-        body.append('image', file); // 'image' phải khớp với tên field ở backend (upload.single('image'))
         try {
+            // 1. Gọi API để upload file
+            const response = await uploadContentImage(file);
 
-            const response = await axios.post('http://localhost:5000/api/upload/image', body);
+            // 2. Kiểm tra xem server có trả về đúng định dạng không
+            if (response && response.data && response.data.url) {
+                // 3. Log ra để kiểm tra URL có đúng không
+                console.log('Server returned URL:', response.data.url);
 
-            return response.data.url;
+                // 4. Trả về CHỈ chuỗi URL cho MdEditor
+                return response.data.url;
+            } else {
+                // Nếu server trả về lỗi hoặc định dạng sai
+                toast.error("Server không trả về URL hợp lệ.");
+                return Promise.reject("Invalid URL from server");
+            }
+
         } catch (error) {
-            toast.error("Tải ảnh trong bài viết thất bại!");
-            console.error("Upload failed", error);
-            // Trả về một lỗi để editor xử lý
+            console.error("Lỗi khi upload ảnh:", error.response?.data || error.message);
+            toast.error("Tải ảnh thất bại!");
             return Promise.reject(error);
         }
     }
+
 
     const handleSave = async () => {
         onSave(formData, imageFile);

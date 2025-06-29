@@ -1,0 +1,93 @@
+.news-detail-container {
+    margin-top: 50px;
+    max-width: 800px;
+    padding: 0 20px;
+    .article-wrapper{
+        .all-posts-link {
+          margin-bottom: 40px;
+        }
+        .article-header{
+          .article-meta {
+            display: flex;
+            align-items: center;
+            color: #555;
+            margin-bottom: 20px;
+            .author-icon {
+                margin-right: 10px;
+            }
+
+
+           }
+           .article-title {
+            font-size: 48px;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            font-weight: bold;
+           }
+  
+        .article-excerpt {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 40px;
+            font-style: italic;
+           }
+        }
+        .content-container{
+           position: relative;
+        }
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-top: 24px;
+            margin-bottom: 24px;
+            border-radius: 8px;
+        }
+
+        .content-fade {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+            pointer-events: none;
+
+        }
+
+        .toggle-content-btn {
+            display: block;
+
+            margin: 20px auto 0;
+
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #6784a3;
+            background-color: #fff;
+            border: 1px solid #007bff;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            outline: none;
+        }
+
+
+        .toggle-content-btn:hover {
+            background-color: #007bff;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
