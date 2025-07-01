@@ -9,13 +9,13 @@ function NewsSection({ newsItems }) {
             <div className="container">
                 <h3 className="shoesnews__title">Tin tức</h3>
                 <div className="row">
-                    {/* SỬA TOÀN BỘ PHẦN MAP Ở ĐÂY */}
+
                     {newsItems.map(newsItem => (
-                        <div className="col-lg-4 col-md-4 col-sm-12 mb-20" key={newsItem._id}> {/* Sửa: key={newsItem._id} */}
-                            {/* Sửa: Link to={`/news/${newsItem.slug}`} */}
+                        <div className="col-lg-4 col-md-4 col-sm-12 mb-20" key={newsItem._id}>
+
                             <Link to={`/news-detail/${newsItem.slug}`} className="product__new-item">
                                 <div className="card" style={{ width: '100%', height: '100%' }}>
-                                    {/* Sửa: src={newsItem.imageBase64} */}
+
                                     <img className="card-img-top" src={newsItem.imageBase64} alt={newsItem.title} style={{ height: "230px", objectFit: "cover" }} />
                                     <div className="card-body">
                                         <h5 className="card-title description title-news">{newsItem.title}</h5>

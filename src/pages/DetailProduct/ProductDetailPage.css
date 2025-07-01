@@ -1,24 +1,17 @@
-/* ========================================= */
-/* === CSS TÙY CHỈNH CHO TRANG CHI TIẾT  === */
-/* ========================================= */
-
 .cursor-pointer {
     cursor: pointer;
 }
 
-/* Style cho ảnh thumbnail được chọn */
 .active-thumbnail {
     border: 2px solid #ee4d2d !important;
 }
 
-/* Style cho nút tùy chọn được chọn */
 .btn.active-option {
     border-color: #ee4d2d;
     color: #ee4d2d;
     background-color: rgba(255, 87, 34, 0.05);
 }
 
-/* Nút "Thêm vào giỏ hàng" với màu viền đặc trưng */
 .btn-outline-danger {
     color: #ee4d2d;
     border-color: #ee4d2d;
@@ -30,7 +23,6 @@
     border-color: #ee4d2d;
 }
 
-/* Nút "Mua Ngay" và các nút màu đỏ chính */
 .btn-danger {
     color: #fff;
     background-color: #ee4d2d;
@@ -38,12 +30,10 @@
 }
 
 .btn-danger:hover {
-    /* Làm màu tối đi một chút khi hover */
     background-color: #d73211;
     border-color: #c82a0c;
 }
 
-/* Style cho overlay của alert giỏ hàng */
 .overlay {
     position: fixed;
     top: 0;
@@ -52,10 +42,8 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1040;
-    /* Phải thấp hơn z-index của modal/alert */
 }
 
-/* Đảm bảo alert giỏ hàng luôn ở trên */
 #alert-cart {
     z-index: 1050;
 }

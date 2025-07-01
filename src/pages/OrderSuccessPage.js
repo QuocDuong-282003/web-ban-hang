@@ -1,8 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-// import './OrderSuccessPage.css'; // CSS riêng nếu cần
 
-// Trang này có header và footer riêng, không dùng common components
 function OrderSuccessPage() {
     return (
         <>

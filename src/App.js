@@ -5,8 +5,8 @@ import { path } from './components/utils/constant';
 // Public Pages
 
 import HomePage from './pages/HomePage/HomePage';
-import ProductPage from './pages/ProductPage';
-import ProductDetailPage from './pages/ProductDetailPage';
+import ProductPage from './pages/DetailProduct/ProductPage';
+import ProductDetailPage from './pages/DetailProduct/ProductDetailPage';
 import NewsPage from './components/news/NewsPage';
 import NewsDetailPage from './components/news/NewsDetailPage';
 import CartPage from './pages/CartPage';
@@ -18,8 +18,6 @@ import ContactPage from './pages/ContactPage';
 import ListLikePage from './pages/ListLikePage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import AccountManagementPage from './pages/Account/AccountManagementPage';
-// import LoginPageUser from './components/authHeader/LoginPageUser';
-// import RegistrationPage from './components/authHeader/RegistrationPage';
 import { ToastContainer } from 'react-toastify';
 // Admin
 import AdminLayout from './container/AdminLayout';

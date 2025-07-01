@@ -59,10 +59,13 @@ function ContactPage() {
                                         <p><i className="fas fa-search-location footer__item-icon"></i> Ho Chi Minh, Viet Nam</p>
                                     </li>
                                     <li className="footer__item">
-                                        <p><i className="fas fa-phone-square-alt footer__item-icon"></i> Phone: <a href="tel:0123456789">0123456789</a></p>
+                                        <p><i className="fas fa-phone-square-alt footer__item-icon"></i> Phone:
+                                            <a href="tel:0889251448">0889251448</a></p>
                                     </li>
                                     <li className="footer__item">
-                                        <p><i className="fas fa-envelope-square footer__item-icon"></i> Email: <a href="mailto:abc@gmail.com">abc@gmail.com</a></p>
+                                        <p><i className="fas fa-envelope-square footer__item-icon"></i>
+                                            Email:
+                                            <a href="mailto:baoduong2972003@gmail.com">baoduong2972003@gmail.com</a></p>
                                     </li>
                                 </ul>
                             </div>

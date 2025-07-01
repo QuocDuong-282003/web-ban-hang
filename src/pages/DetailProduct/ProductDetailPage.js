@@ -4,12 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-import Header from '../components/common/Header';
-import Footer from '../components/common/Footer';
-import MobileMenu from '../components/common/MobileMenu';
-import GoToTop from '../components/common/GoToTop';
-import ProductItem from '../components/product/ProductItem';
-import { getProductById, getRelatedProducts } from '../container/services/userService';
+import Header from '../../components/common/Header';
+import Footer from '../../components/common/Footer';
+import MobileMenu from '../../components/common/MobileMenu';
+import GoToTop from '../../components/common/GoToTop';
+import ProductItem from '../../components/product/ProductItem';
+import { getProductById, getRelatedProducts } from '../../container/services/userService';
 
 // Hàm render sao - Đặt ở ngoài component vì nó không phụ thuộc vào state/props
 const renderStars = (rating) => {
@@ -276,12 +276,13 @@ function ProductDetailPage() {
                     <p className="text-secondary">{product.description || "Chưa có mô tả chi tiết."}</p>
                 </div>
             </div>
-
             {relatedProducts && relatedProducts.length > 0 && (
                 <div className="container my-4">
                     <h5 className="font-weight-bold text-uppercase">Sản phẩm tương tự</h5>
                     <div className="row mt-3">
+                        {/* Lặp qua danh sách sản phẩm liên quan */}
                         {relatedProducts.map(rp => (
+                            // Gán các class cột ở đây, không phải trong ProductItem
                             <div className="col-lg-3 col-md-4 col-6 mb-4" key={rp._id}>
                                 <ProductItem product={rp} />
                             </div>

@@ -1,70 +1,78 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import './ProductItem.scss'; // Giữ lại file scss của bạn
 
-function ProductItem({ product, onQuickView }) {
+function ProductItem({ product }) {
+
     const formatPrice = (price) => {
-        return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+        if (typeof price === 'number') {
+            return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+        }
+        return 'Liên hệ';
     };
 
     const renderStars = (rating) => {
-        let stars = [];
+        const stars = [];
+        const fullStars = Math.floor(rating || 0);
         for (let i = 1; i <= 5; i++) {
-            if (i <= rating) {
-                stars.push(<i key={i} className="home-product-item__star--gold fas fa-star"></i>);
-            } else if (i - 0.5 === rating) {
-                stars.push(<i key={i} className="home-product-item__star--gold fas fa-star-half-alt"></i>);
+            if (i < fullStars + 1) {
+                stars.push(<i key={i} className="fas fa-star" style={{ color: '#ffc107' }}></i>);
             } else {
-                stars.push(<i key={i} className="fas fa-star" style={{ color: "#d5d5d5" }}></i>);
+                stars.push(<i key={i} className="far fa-star" style={{ color: '#e4e5e9' }}></i>);
             }
         }
         return stars;
     };
 
+    const placeholderImage = 'https://via.placeholder.com/300x300.png?text=No+Image';
+    if (!product) return null;
+
+    // Backend đã trả về `originalPrice` và `finalPrice` (hoặc `displayPrice`)
+    // Chúng ta sẽ kiểm tra cả hai để đảm bảo tương thích
+    const originalPrice = product.originalPrice || product.price;
+    const finalPrice = product.displayPrice || product.finalPrice;
+
+    const hasDiscount = typeof finalPrice === 'number' && typeof originalPrice === 'number' && finalPrice < originalPrice;
 
     return (
-        <div className="col-lg-4 col-md-6 col-12 mb-20" style={{ marginBottom: '20px' }}>
-            <Link to={`/product-detail/${product.id}`} className="product__new-item">
-                <div className="card" style={{ width: '100%' }}>
-                    <div>
-                        <img className="card-img-top" src={product.img} alt={product.name} />
-                        <form action="" className="hover-icon hidden-sm hidden-xs">
-                            <input type="hidden" />
-                            <button className="btn-add-to-cart" title="Mua ngay" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert(`Thêm ${product.name} vào giỏ`); /* Logic thêm vào giỏ */ }}>
-                                <i className="fas fa-cart-plus"></i>
-                            </button>
-                            <button data-toggle="modal" data-target="#myModalQuickView" className="quickview" title="Xem nhanh" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickView(product); }}>
-                                <i className="fas fa-search"></i>
-                            </button>
-                        </form>
-                    </div>
-                    <div className="card-body">
-                        <h5 className="card-title custom__name-product">
-                            {product.name}
-                        </h5>
-                        <div className="product__price">
-                            {product.oldPrice && <p className="card-text price-color product__price-old">{formatPrice(product.oldPrice)}</p>}
-                            <p className="card-text price-color product__price-new">{formatPrice(product.price)}</p>
-                        </div>
-                        <div className="home-product-item__action">
-                            <span className="home-product-item__like home-product-item__like--liked"> {/* Cần state để quản lý like */}
-                                <i className="home-product-item__like-icon-empty far fa-heart"></i>
-                                <i className="home-product-item__like-icon-fill fas fa-heart"></i>
-                            </span>
-                            <div className="home-product-item__rating">
-                                {renderStars(product.rating || 0)} {/* Giả sử có rating */}
-                            </div>
-                            <span className="home-product-item__sold">{product.sales || 0} đã bán</span>
-                        </div>
-                        {product.oldPrice && product.price < product.oldPrice && (
-                            <div className="sale-off">
-                                <span className="sale-off-percent">{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%</span>
-                                <span className="sale-off-label">GIẢM</span>
-                            </div>
-                        )}
+        // SỬA 1: BỎ `div` cha có class cột. Component này giờ đây rất linh hoạt.
+        <Link to={`/product-detail/${product.slug || product._id}`} className="text-decoration-none text-dark d-block h-100">
+            <div className="card h-100 border-0 shadow-sm product-card-hover">
+                <div style={{ position: 'relative' }}>
+                    <div style={{ aspectRatio: '1 / 1', overflow: 'hidden' }}>
+                        <img
+                            className="card-img-top"
+                            src={product.imageBase64 || placeholderImage}
+                            alt={product.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
                     </div>
                 </div>
-            </Link>
-        </div>
+                <div className="card-body d-flex flex-column p-3">
+                    <h5 className="card-title product-name flex-grow-1" style={{ minHeight: '42px', fontSize: '1rem' }}>
+                        {product.name}
+                    </h5>
+                    <div className="mt-auto">
+                        <div className="product__price">
+                            <span className="font-weight-bold price-product-new">{formatPrice(finalPrice)}</span>
+                            {hasDiscount && (
+                                <del className="text-muted ml-2 price-product-old" style={{ fontSize: '0.9rem' }}>
+                                    {formatPrice(originalPrice)}
+                                </del>
+                            )}
+                        </div>
+                        <div className="d-flex justify-content-between align-items-center mt-2">
+                            <div className="home-product-item__rating">
+                                {renderStars(product.rating)}
+                            </div>
+                            <span className="text-muted" style={{ fontSize: '0.8rem' }}>
+                                {product.sold || 0} đã bán
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Link>
     );
 }
 

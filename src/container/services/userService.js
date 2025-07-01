@@ -1,6 +1,9 @@
 import axios from 'axios';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+console.log('API is calling to:', API_URL);
+
 const API = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: API_URL,
 });
 
 //  Login: POST /api/login
@@ -144,7 +147,6 @@ export const changeUserPassword = (passwordData) => {
 };
 
 
-// --- BỔ SUNG VÀO FILE: src/services/userService.js ---
 
 // ... các hàm cũ ...
 // -- Home Page Products --
@@ -152,7 +154,12 @@ export const getNewestProducts = () => API.get('/products/newest');
 export const getHotProducts = () => API.get('/products/hot');
 export const getPopularProducts = () => API.get('/products/popular');
 export const getYouMayLikeProducts = () => API.get('/products/newest?limit=4');
-
+export const getFilteredProducts = (params) => {
+    return API.get('/products/filter', { params })
+};
+export const getFilterOptions = () => {
+    return API.get('/products/filters-data');
+};
 // -- Product Detail Page --
 export const getProductById = (productId) => API.get(`/product/${productId}`);
 export const getRelatedProducts = (productId) => API.get(`/products/related/${productId}`);
