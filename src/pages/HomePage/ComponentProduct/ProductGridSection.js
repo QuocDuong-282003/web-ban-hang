@@ -32,14 +32,10 @@ function ProductGridSection({ title, products, openQuickView }) {
             <h3 className="product__ne title-product">{title}</h3>
             <div className="row">
                 {products.map(product => (
-                    // Sử dụng class cột của Bootstrap để responsive
                     <div className="col-lg-3 col-md-4 col-6 mb-4" key={product._id}>
                         <Link to={`/product-detail/${product._id}`} className="product__new-item text-decoration-none">
-                            {/* Thêm h-100 để các card cao bằng nhau */}
                             <div className="card h-100" style={{ width: "100%" }}>
-                                {/* Bọc ảnh trong div position-relative để đặt tag giảm giá */}
                                 <div style={{ position: 'relative' }}>
-                                    {/* Cố định chiều cao ảnh để layout đều */}
                                     <img
                                         className="card-img-top"
                                         src={product.imageBase64 || './assets/img/placeholder.png'}
@@ -55,7 +51,6 @@ function ProductGridSection({ title, products, openQuickView }) {
                                         </button>
                                     </form>
 
-                                    {/* SỬA Ở ĐÂY: ĐÃ THÊM LẠI PHẦN HIỂN THỊ TAG GIẢM GIÁ */}
                                     {product.discountPercent > 0 && (
                                         <div className="sale-off">
                                             <span className="sale-off-percent">{product.discountPercent}%</span>
@@ -64,7 +59,6 @@ function ProductGridSection({ title, products, openQuickView }) {
                                     )}
                                 </div>
 
-                                {/* Dùng flexbox để căn chỉnh nội dung bên trong card */}
                                 <div className="card-body d-flex flex-column">
                                     <h5 className="card-title description flex-grow-1" style={{ minHeight: '42px' }}>
                                         {product.name}

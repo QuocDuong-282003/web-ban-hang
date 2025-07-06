@@ -80,7 +80,7 @@ function NewsDetailPage() {
 
     return (
         <div>
-            <div className={`overlay ${isMobileMenuOpen ? '' : 'hidden'}`} onClick={toggleMobileMenu}></div>
+            {/* <div className={`overlay ${isMobileMenuOpen ? '' : 'hidden'}`} onClick={toggleMobileMenu}></div> */}
             <MobileMenu isOpen={isMobileMenuOpen} toggleMenu={toggleMobileMenu} />
             <Header />
 

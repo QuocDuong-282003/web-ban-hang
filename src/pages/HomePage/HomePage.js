@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-// Import các component layout chung
 import Header from '../../components/common/Header';
 import Footer from '../../components/common/Footer';
 import MobileMenu from '../../components/common/MobileMenu';
@@ -12,12 +11,11 @@ import GoToTop from '../../components/common/GoToTop';
 import ModalQuickView from '../../components/common/ModalQuickView';
 import PolicySection from '../../components/Home/PolicySection';
 
-// Import các component con của trang chủ
 import PopularProductsSection from './ComponentProduct/PopularProductsSection';
 import ProductGridSection from './ComponentProduct/ProductGridSection';
 import NewsSection from './ComponentProduct/NewsSection';
 
-// BƯỚC 1: IMPORT CÁC HÀM API TỪ SERVICE
+
 import {
     getPopularProducts,
     getNewestProducts,
@@ -47,7 +45,6 @@ function HomePage() {
     const [isLoading, setIsLoading] = useState(true); // State  quản lý trạng thái tải
     //sate news
     const [newItems, setNewsItems] = useState([]);
-    //   useEffect GỌI API KHI COMPONENT ĐƯỢC TẢI
     useEffect(() => {
         const fetchAllProducts = async () => {
             try {
@@ -63,7 +60,7 @@ function HomePage() {
                     getPopularProducts(),
                     getNewestProducts(),
                     getHotProducts(),
-                    getYouMayLikeProducts(), // Sử dụng hàm đã tạo cho mục "Có thể bạn sẽ thích"
+                    getYouMayLikeProducts(),
                     getAllNewClient()
                 ]);
 
@@ -78,15 +75,15 @@ function HomePage() {
                 console.error("Lỗi khi tải dữ liệu trang chủ:", error);
                 toast.error("Không thể tải dữ liệu sản phẩm. Vui lòng thử lại.");
             } finally {
-                // Dừng trạng thái loading dù API thành công hay thất bại
+
                 setIsLoading(false);
             }
         };
 
         fetchAllProducts();
-    }, []); // Mảng rỗng `[]` đảm bảo effect này chỉ chạy một lần duy nhất
+    }, []);
 
-    // Các hàm xử lý giao diện (giữ nguyên)
+
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
     const openQuickView = (product) => {
@@ -103,7 +100,6 @@ function HomePage() {
             <Header />
 
             <div className="container">
-                {/* Slide show (giữ nguyên) */}
                 <div className="row">
                     <section className="awe-section-1">
                         <div className="mt-4 top-sliders col-md-12">
@@ -148,14 +144,12 @@ function HomePage() {
                     </section>
                 </div>
 
-                {/* BƯỚC 4: HIỂN THỊ "LOADING..." HOẶC CÁC SECTION SẢN PHẨM */}
                 {isLoading ? (
                     <div className="text-center p-5"><h3>Đang tải sản phẩm...</h3></div>
                 ) : (
                     <div className="product">
                         <div className="container">
 
-                            {/* Truyền dữ liệu từ state (API) thay vì dữ liệu mẫu */}
                             <PopularProductsSection products={popularProducts} />
 
                             <ProductGridSection
@@ -181,7 +175,6 @@ function HomePage() {
                     </div>
                 )}
 
-                {/* News Section (vẫn dùng dữ liệu mẫu) */}
                 <NewsSection newsItems={newItems} />
             </div>
 

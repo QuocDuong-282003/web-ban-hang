@@ -1,49 +1,238 @@
-.cursor-pointer {
+/* --- BẮT ĐẦU KHỐI CSS CHO TRANG CHI TIẾT SẢN PHẨM --- */
+
+/* ---- CSS CHO PHẦN PHÂN LOẠI, SỐ LƯỢNG, ACTIONS ---- */
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    font-size: 1rem;
+}
+
+.detail-label {
+    width: 110px;
+    text-transform: capitalize;
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.detail-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+/* -- CSS cho nút chọn phân loại (variant) -- */
+.variant-btn {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, .09);
+    padding: 8px 15px;
     cursor: pointer;
+    border-radius: 2px;
+    min-width: 80px;
+    text-align: center;
+    transition: all 0.2s ease;
+    color: rgba(0, 0, 0, .8);
+    outline: none;
 }
 
-.active-thumbnail {
-    border: 2px solid #ee4d2d !important;
-}
-
-.btn.active-option {
-    border-color: #ee4d2d;
-    color: #ee4d2d;
-    background-color: rgba(255, 87, 34, 0.05);
-}
-
-.btn-outline-danger {
+.variant-btn:hover {
     color: #ee4d2d;
     border-color: #ee4d2d;
 }
 
-.btn-outline-danger:hover {
-    color: #fff;
-    background-color: #ee4d2d;
+.variant-btn.active {
+    color: #ee4d2d;
     border-color: #ee4d2d;
+    position: relative;
 }
 
-.btn-danger {
-    color: #fff;
-    background-color: #ee4d2d;
-    border-color: #ee4d2d;
-}
-
-.btn-danger:hover {
-    background-color: #d73211;
-    border-color: #c82a0c;
-}
-
-.overlay {
-    position: fixed;
-    top: 0;
+.variant-btn.active::before {
+    content: '';
+    position: absolute;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1040;
+    top: 0;
+    border-top: 14px solid #ee4d2d;
+    border-right: 14px solid transparent;
 }
 
-#alert-cart {
-    z-index: 1050;
+.variant-btn.active::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    position: absolute;
+    left: 0px;
+    top: -1px;
+    font-size: 8px;
+    color: white;
+}
+
+.variant-btn:disabled {
+    background-color: #f9f9f9;
+    color: #ccc;
+    cursor: not-allowed;
+    border-color: #e0e0e0;
+    position: relative;
+    text-decoration: none;
+}
+
+.variant-btn:disabled::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #dcdcdc;
+    transform: rotate(15deg);
+}
+
+/* -- CSS cho khối Số Lượng (bao gồm 2 hàng) -- */
+.detail-row-container {
+    margin-bottom: 25px;
+}
+
+.detail-row-container .detail-row {
+    margin-bottom: 5px;
+}
+
+.stock-info-row {
+    padding-left: 126px;
+    /* 110px (label) + 16px (margin) */
+}
+
+.stock-info {
+    font-size: 0.9rem;
+    color: #757575;
+}
+
+/* Ghi đè CSS của Bootstrap cho khối input-group số lượng */
+.product-detail-page .input-group {
+    border: 1px solid rgba(0, 0, 0, .09);
+    border-radius: 2px;
+    max-width: 120px;
+    height: 50px;
+}
+
+.product-detail-page .input-group .btn-outline-secondary {
+    width: 32px;
+    height: 30px;
+    border: none !important;
+    background-color: transparent !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 14px;
+    color: rgba(0, 0, 0, .8) !important;
+    box-shadow: none !important;
+}
+
+.product-detail-page .input-group .btn-outline-secondary:disabled {
+    color: #ccc !important;
+    opacity: 1;
+}
+
+.product-detail-page .input-group .form-control.text-center {
+    height: 32px;
+    border: none !important;
+    border-left: 1px solid rgba(0, 0, 0, .09) !important;
+    border-right: 1px solid rgba(0, 0, 0, .09) !important;
+    box-shadow: none !important;
+    padding: 0;
+    flex: 1 1 auto;
+    width: 50px;
+    min-width: 50px;
+    background-color: transparent;
+}
+
+
+/* -- CSS cho các nút action -- */
+.detail-actions {
+    margin-top: 30px;
+    padding-left: 126px;
+    display: flex;
+    gap: 15px;
+}
+
+.btn-action {
+    border-radius: 2px;
+    height: 48px;
+    padding: 0 20px;
+    min-width: 180px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: capitalize;
+    transition: background-color 0.1s ease;
+    border: 1px solid transparent;
+}
+
+.btn-action:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-add-to-cart {
+    background: rgba(255, 87, 34, 0.1);
+    border-color: #ee4d2d;
+    color: #ee4d2d;
+}
+
+.btn-add-to-cart:hover:not(:disabled) {
+    background: rgba(255, 87, 34, 0.15);
+}
+
+.btn-add-to-cart i {
+    font-size: 1.2rem;
+    margin-right: 8px;
+}
+
+.btn-buy-now {
+    background: #ee4d2d;
+    border-color: #ee4d2d;
+    color: #fff;
+}
+
+.btn-buy-now:hover:not(:disabled) {
+    background: #f05d40;
+}
+
+/* --- KẾT THÚC KHỐI CSS MỚI --- */
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    overflow: hidden;
+    width: 120px;
+    height: 32px;
+}
+
+.quantity-control button {
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #555;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.quantity-control button:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.quantity-control input {
+    width: 100%;
+    height: 32px;
+    border: none;
+    text-align: center;
+    font-size: 14px;
+    outline: none;
 }

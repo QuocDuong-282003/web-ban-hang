@@ -23,28 +23,13 @@ const Review = () => {
     const fetchAllReviews = async (page) => {
         setIsLoading(true);
         try {
-            //  await axios.get('http://localhost:5000/api/users');
+
             const response = await getAdminAllReviews({ page: page, limit: 15 });
             setReviewData(response.data);
         } catch (error) {
             toast.error('Không thể tải danh sách đánh giá !')
             console.error("Lỗi khi tải danh sách đánh giá:", error);
-            // if (error.response) {
 
-            //     console.error("Dữ liệu lỗi từ server:", error.response.data);
-            //     console.error("Trạng thái lỗi:", error.response.status);
-
-            //     const message = error.response.data.message || 'Không thể tải danh sách đánh giá !';
-            //     toast.error(message);
-            // } else if (error.request) {
-            //     // Request đã được gửi nhưng không nhận được phản hồi
-            //     console.error("Không nhận được phản hồi từ server:", error.request);
-            //     toast.error('Không thể kết nối tới máy chủ!');
-            // } else {
-
-            //     console.error("Lỗi không xác định:", error.message);
-            //     toast.error('Đã xảy ra lỗi không xác định!');
-            // }
 
         }
         finally {

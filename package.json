@@ -5,6 +5,8 @@
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
     "@reduxjs/toolkit": "^2.8.2",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.4.0",
     "axios": "^1.9.0",
     "bootstrap": "^5.3.6",
     "chart.js": "^4.4.9",
@@ -30,7 +32,8 @@
     "react-scripts": "^5.0.1",
     "react-toastify": "^11.0.5",
     "redux": "^5.0.1",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "stripe": "^18.3.0"
   },
   "name": "web-ban-hang",
   "version": "1.0.0",

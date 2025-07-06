@@ -52,6 +52,5 @@ const userAuthSlice = createSlice({
     },
 });
 
-// Export từ đúng biến slice
 export const { userLoginSuccess, userLoginFailure, userLogout } = userAuthSlice.actions;
 export default userAuthSlice.reducer;

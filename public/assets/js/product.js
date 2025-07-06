@@ -12,19 +12,19 @@
 //         $(`#minus-${id}`).removeClass("undisplay");
 //     }
 // }
-$(document).ready(function() {
-    $('#filter').click(function(e){
+$(document).ready(function () {
+    $('#filter').click(function (e) {
         $('.filter-mobile').toggleClass('xyz');
         $('.overlay2').toggleClass('hidden');
     })
-    $('.overlay2').click(function(e){
+    $('.overlay2').click(function (e) {
         $('.filter-mobile').toggleClass('xyz');
         $('.overlay2').toggleClass('hidden');
     })
 })
 
-function khonghienthidanhsach(id,cc){ 
+function khonghienthidanhsach(id, cc) {
     $(`#${cc}`).toggle("slow");
-    $(`#plus-${id}`).toggleClass("hidden") 
-    $(`#minus-${id}`).toggleClass("hidden");    
+    $(`#plus-${id}`).toggleClass("hidden")
+    $(`#minus-${id}`).toggleClass("hidden");
 }

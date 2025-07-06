@@ -24,25 +24,22 @@ function ProductItem({ product }) {
         return stars;
     };
 
-    const placeholderImage = 'https://via.placeholder.com/300x300.png?text=No+Image';
     if (!product) return null;
 
-    // Backend đã trả về `originalPrice` và `finalPrice` (hoặc `displayPrice`)
-    // Chúng ta sẽ kiểm tra cả hai để đảm bảo tương thích
+
     const originalPrice = product.originalPrice || product.price;
     const finalPrice = product.displayPrice || product.finalPrice;
 
     const hasDiscount = typeof finalPrice === 'number' && typeof originalPrice === 'number' && finalPrice < originalPrice;
 
     return (
-        // SỬA 1: BỎ `div` cha có class cột. Component này giờ đây rất linh hoạt.
-        <Link to={`/product-detail/${product.slug || product._id}`} className="text-decoration-none text-dark d-block h-100">
+        <Link to={`/product-detail/${product._id}`} className="text-decoration-none text-dark d-block h-100">
             <div className="card h-100 border-0 shadow-sm product-card-hover">
                 <div style={{ position: 'relative' }}>
                     <div style={{ aspectRatio: '1 / 1', overflow: 'hidden' }}>
                         <img
                             className="card-img-top"
-                            src={product.imageBase64 || placeholderImage}
+                            src={product.imageBase64}
                             alt={product.name}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />

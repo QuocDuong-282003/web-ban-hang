@@ -1,4 +1,3 @@
-// --- THAY THẾ TOÀN BỘ FILE: src/components/Product/ProductTable.js ---
 
 import React, { useState, useEffect } from 'react';
 import AddProductModal from '../Modal/AddProductModal';
@@ -10,15 +9,11 @@ import './ProductTable.css';
 import { handleAddProduct, getAllProduct, handleUpdateProduct, handleDeleteProduct, assignDiscountsToProduct } from '../../services/userService';
 
 const ProductTable = () => {
-  // State quản lý danh sách sản phẩm
   const [products, setProducts] = useState([]);
   const [showAssignModal, setShowAssignModal] = useState(false);
-  // Modal thêm/sửa sản phẩm
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-
-  // State tìm kiếm và phân trang
   const [searchItem, setSearchItem] = useState('');
   const [filteredProduct, setFilteredProduct] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,36 +44,38 @@ const ProductTable = () => {
   const fetchProducts = async () => {
     try {
       const res = await getAllProduct();
-      setProducts(res.data);
+      if (res && res.data && Array.isArray(res.data.data)) {
+        setProducts(res.data.data);
+      } else {
+        setProducts([]);
+        toast.error("Không thể tải danh sách sản phẩm hoặc dữ liệu không đúng định dạng.");
+      }
     } catch (err) {
       console.error('Lỗi khi lấy danh sách sản phẩm:', err);
       toast.error("Không thể tải danh sách sản phẩm!");
+      setProducts([]);
     }
   };
 
   const handleAdd = async (formData) => {
     try {
-
       await handleAddProduct(formData);
-
       toast.success("Thêm sản phẩm thành công!");
-      setShowAddModal(false); // Đóng modal
-      fetchProducts(); // Làm mới danh sách
+      setShowAddModal(false);
+      fetchProducts();
     } catch (err) {
-      // Bắt lỗi và hiển thị toast
       const errorMessage = err.response?.data?.message || "Lỗi khi thêm sản phẩm";
       toast.error(errorMessage);
-      throw err; // Ném lỗi lại để component con có thể biết là đã thất bại
+      throw err;
     }
   };
 
   useEffect(() => {
     const lowercasedFilter = searchItem.toLowerCase();
     const filtered = products.filter(product => {
-      return (
-        product.name.toLowerCase().includes(lowercasedFilter) ||
-        (product.category && product.category.name.toLowerCase().includes(lowercasedFilter))
-      );
+      const nameMatch = product.name.toLowerCase().includes(lowercasedFilter);
+      const categoryMatch = product.category && product.category.name.toLowerCase().includes(lowercasedFilter);
+      return nameMatch || categoryMatch;
     });
     setFilteredProduct(filtered);
     setCurrentPage(1);
@@ -110,12 +107,11 @@ const ProductTable = () => {
     } catch (err) {
       const errorMessage = err.response?.data?.message || "Cập nhật sản phẩm thất bại!";
       toast.error(errorMessage);
-      throw err; // Ném lỗi lại để modal biết và không tự đóng
+      throw err;
     }
   };
 
   const handleDelete = async (id) => {
-    // Thêm confirm dialog để an toàn hơn
     if (window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?')) {
       try {
         await handleDeleteProduct(id);
@@ -159,8 +155,7 @@ const ProductTable = () => {
           <tr>
             <th>STT</th>
             <th>Tên</th>
-            {/* SỬA Ở ĐÂY: Thêm cột "Tùy chọn" */}
-            <th>Tùy chọn</th>
+            <th>Tùy chọn (Size/Màu)</th>
             <th>Giá</th>
             <th>Tồn kho</th>
             <th>Danh mục</th>
@@ -178,8 +173,6 @@ const ProductTable = () => {
               <tr key={product._id}>
                 <td>{indexOfFirstProduct + index + 1}</td>
                 <td>{product.name}</td>
-
-                {/* SỬA Ở ĐÂY: Thêm ô dữ liệu cho cột "Tùy chọn" */}
                 <td>
                   {product.options && product.options.length > 0 ? (
                     <ul className="options-list">
@@ -188,7 +181,7 @@ const ProductTable = () => {
                       ))}
                     </ul>
                   ) : (
-                    'Không có'
+                    'Mặc định'
                   )}
                 </td>
 
@@ -206,14 +199,11 @@ const ProductTable = () => {
                     <span>{formatPrice(product.price)}</span>
                   )}
                 </td>
-
                 <td>{product.stock}</td>
                 <td>{product.category ? product.category.name : 'Không có'}</td>
-
                 <td>
                   {isSale ? `${product.discountInfo.code} (${product.discountInfo.description})` : 'Không'}
                 </td>
-
                 <td>
                   {product.imageBase64 ? (
                     <img src={product.imageBase64} alt={product.name} className="product-img" />
@@ -221,7 +211,6 @@ const ProductTable = () => {
                     'Không có ảnh'
                   )}
                 </td>
-
                 <td>
                   <button className="product-action-button product-edit-button"
                     onClick={() => { setSelectedProduct(product); setShowEditModal(true); }}>Sửa</button>
@@ -235,41 +224,20 @@ const ProductTable = () => {
         </tbody>
       </table>
 
+      {/* Pagination và Modals  */}
       <div className="pagination">
         {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i + 1}
-            onClick={() => paginate(i + 1)}
-            className={currentPage === i + 1 ? 'active' : ''}
-          >
+          <button key={i + 1} onClick={() => paginate(i + 1)} className={currentPage === i + 1 ? 'active' : ''}>
             {i + 1}
           </button>
         ))}
       </div>
-
-      <AddProductModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onSave={handleAdd}
-      />
-
+      <AddProductModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} onSave={handleAdd} />
       {selectedProduct && (
-        <EditProductModal
-          isOpen={showEditModal}
-          onClose={() => { setShowEditModal(false); setSelectedProduct(null); }}
-          product={selectedProduct}
-          onSave={handleEdit}
-          existingProducts={products}
-        />
+        <EditProductModal isOpen={showEditModal} onClose={() => { setShowEditModal(false); setSelectedProduct(null); }} product={selectedProduct} onSave={handleEdit} existingProducts={products} />
       )}
-
       {selectedProduct && (
-        <AssignDiscountModal
-          isOpen={showAssignModal}
-          onClose={closeAssignModal}
-          onSave={handleAssignDiscounts}
-          product={selectedProduct}
-        />
+        <AssignDiscountModal isOpen={showAssignModal} onClose={closeAssignModal} onSave={handleAssignDiscounts} product={selectedProduct} />
       )}
     </div>
   );

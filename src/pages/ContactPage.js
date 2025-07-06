@@ -43,7 +43,7 @@ function ContactPage() {
 
     return (
         <div>
-            <div className={`overlay ${isMobileMenuOpen ? '' : 'hidden'}`} onClick={isMobileMenuOpen ? toggleMobileMenu : null}></div>
+            {/* <div className={`overlay ${isMobileMenuOpen ? '' : 'hidden'}`} onClick={isMobileMenuOpen ? toggleMobileMenu : null}></div> */}
             <MobileMenu isOpen={isMobileMenuOpen} toggleMenu={toggleMobileMenu} />
             <Header />
 

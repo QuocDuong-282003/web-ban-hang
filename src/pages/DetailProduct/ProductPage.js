@@ -65,7 +65,6 @@ function ProductPage() {
         const stringified = queryString.stringify(finalFilters, {
             skipEmptyString: true, skipNull: true, arrayFormat: 'comma'
         });
-        // SỬA 3: Dùng navigate() thay cho history.push()
         navigate({ pathname: '/products', search: stringified });
     };
 
@@ -115,6 +114,25 @@ function ProductPage() {
                                 <div className="col-12 text-center"><p>Không tìm thấy sản phẩm nào.</p></div>
                             )}
                         </div>
+                        {/* <div className="row">
+                            {isLoading
+                                ? Array.from({ length: 6 }).map((_, index) => (
+                                    <div className="col-lg-4 col-md-6 col-sm-6 col-6 mb-4" key={index}>
+                                        <div className="product-skeleton">Đang tải...</div>
+                                    </div>
+                                ))
+                                : products.length > 0 ? (
+                                    products.map(product => (
+                                        <div className="col-lg-4 col-md-6 col-sm-6 col-6 mb-4" key={product._id}>
+                                            <ProductItem product={product} />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-12 text-center"><p>Không tìm thấy sản phẩm nào.</p></div>
+                                )
+                            }
+                        </div> */}
+
                         {/* Phân trang */}
                         {!isLoading && pagination.totalPages > 1 && (
                             <nav style={{ marginTop: '30px', display: 'flex', justifyContent: 'center' }}>

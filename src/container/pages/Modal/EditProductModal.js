@@ -9,21 +9,20 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
 
     // State cho các trường input cơ bản
     const [formData, setFormData] = useState({
-        _id: '',
         name: '',
         description: '',
         price: 0,
         stock: 0,
         sold: 0,
         category: '',
+        brand: '',
     });
 
     const [newImageFiles, setNewImageFiles] = useState([]);
     const [categories, setCategories] = useState([]);
-
     const [options, setOptions] = useState(['']);
 
-    // useEffect để tải danh mục 
+    // useEffect để tải danh mục
     useEffect(() => {
         if (isOpen) {
             const fetchCategories = async () => {
@@ -42,17 +41,15 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
     useEffect(() => {
         if (product) {
             setFormData({
-                _id: product._id,
                 name: product.name || '',
                 description: product.description || '',
                 price: product.price || 0,
                 stock: product.stock || 0,
                 sold: product.sold || 0,
                 category: product.category?._id || '',
+                brand: product.brand || '',
             });
 
-
-            // Nếu sản phẩm có options, dùng nó. Nếu không, tạo 1 dòng trống.
             if (product.options && product.options.length > 0) {
                 setOptions([...product.options]);
             } else {
@@ -61,22 +58,19 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
 
             setNewImageFiles([]);
         }
-    }, [product]); // Phụ thuộc vào `product` để chạy lại khi có sản phẩm mới được chọn
+    }, [product]);
 
     if (!isOpen || !product) return null;
 
-    // Hàm xử lý thay đổi input cơ bản (giữ nguyên)
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // Hàm xử lý thay đổi file (giữ nguyên)
     const handleFileChange = (e) => {
         setNewImageFiles(Array.from(e.target.files));
     };
 
-    // SỬA Ở ĐÂY: Thêm các hàm quản lý state 'options'
     const handleOptionChange = (index, event) => {
         const newOptions = [...options];
         newOptions[index] = event.target.value;
@@ -94,9 +88,14 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
         }
     };
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Kiểm tra các trường
+        if (!formData.brand.trim()) {
+            toast.error('Vui lòng nhập thương hiệu.');
+            return;
+        }
 
         const normalizedNewName = formData.name.trim().toLowerCase();
         const isDuplicate = existingProducts.some(
@@ -108,14 +107,23 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
         }
 
         const updateFormData = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-            updateFormData.append(key, value);
-        });
 
-        // SỬA Ở ĐÂY: Thêm 'options' vào FormData
+        // === PHẦN SỬA LỖI QUAN TRỌNG NHẤT ===
+        // Phải append từng trường của object `formData` một cách riêng lẻ.
+        updateFormData.append('name', formData.name);
+        updateFormData.append('description', formData.description);
+        updateFormData.append('price', formData.price);
+        updateFormData.append('stock', formData.stock);
+        updateFormData.append('sold', formData.sold);
+        updateFormData.append('category', formData.category);
+        updateFormData.append('brand', formData.brand);
+        // ======================================
+
         const filledOptions = options.filter(opt => opt.trim() !== '');
         updateFormData.append('options', JSON.stringify(filledOptions));
 
+        // Thêm các file ảnh mới vào FormData.
+        // Tên 'images' phải trùng với middleware multer.
         if (newImageFiles.length > 0) {
             for (const file of newImageFiles) {
                 updateFormData.append('images', file);
@@ -123,12 +131,10 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
         }
 
         try {
-            // onSave chính là handleEdit trong ProductTable
             await onSave(updateFormData);
-            // Component cha sẽ đóng modal và fetch lại dữ liệu
         } catch (err) {
-            // Lỗi đã được xử lý ở component cha
             console.error("Lỗi khi gửi form từ EditProductModal:", err);
+            // Lỗi đã được xử lý và toast ở component cha.
         }
     };
 
@@ -136,10 +142,10 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
         <div className="edit-product-modal__overlay">
             <div className="edit-product-modal__content">
                 <h3 className="edit-product-modal__title">Chỉnh sửa sản phẩm</h3>
-
                 <form onSubmit={handleSubmit} className="edit-product-modal__form">
-                    {/* Các trường input cũ, không thay đổi */}
+                    {/* Các input fields của bạn giữ nguyên, chúng đã đúng */}
                     <div className="edit-product-modal__form-group"><label>Tên sản phẩm:</label><input name="name" type="text" value={formData.name} onChange={handleChange} required /></div>
+                    <div className="edit-product-modal__form-group"><label>Thương hiệu:</label><input name="brand" type="text" value={formData.brand} onChange={handleChange} required /></div>
                     <div className="edit-product-modal__form-group"><label>Mô tả:</label><textarea name="description" value={formData.description} onChange={handleChange} required /></div>
                     <div className="edit-product-modal__form-group"><label>Giá:</label><input name="price" type="number" value={formData.price} onChange={handleChange} required /></div>
                     <div className="edit-product-modal__form-group"><label>Tồn kho:</label><input name="stock" type="number" value={formData.stock} onChange={handleChange} required /></div>
@@ -150,27 +156,16 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
                             {categories.map((cat) => (<option key={cat._id} value={cat._id}>{cat.name}</option>))}
                         </select>
                     </div>
-
-                    {/*  Thêm phần quản lý "Tùy chọn" */}
                     <hr />
                     <h4>Các tùy chọn (Màu sắc, Kiểu dáng)</h4>
                     {options.map((option, index) => (
                         <div key={index} className="variant-row">
-                            <input
-                                type="text"
-                                placeholder="Tên tùy chọn"
-                                value={option}
-                                onChange={e => handleOptionChange(index, e)}
-                            />
-                            {options.length > 1 && (
-                                <button type="button" className="remove-variant-btn" onClick={() => removeOption(index)}>Xóa</button>
-                            )}
+                            <input type="text" placeholder="Tên tùy chọn" value={option} onChange={e => handleOptionChange(index, e)} />
+                            {options.length > 1 && (<button type="button" className="remove-variant-btn" onClick={() => removeOption(index)}>Xóa</button>)}
                         </div>
                     ))}
                     <button type="button" className="add-variant-btn" onClick={addOption}>+ Thêm tùy chọn</button>
                     <hr />
-
-                    {/* Các trường input ảnh, không thay đổi */}
                     <div className="edit-product-modal__form-group"><label>Ảnh hiện tại:</label>
                         {product.imageBase64 ? (<img src={product.imageBase64} alt="Current product" className="edit-product-modal__image" />) : (<p>Không có ảnh.</p>)}
                     </div>
