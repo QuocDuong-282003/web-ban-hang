@@ -1,0 +1,46 @@
+.search-product-shopee {
+    display: flex;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    width: 100%;
+   
+    height: 35px;
+    background-color: white;
+  
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0 16px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: #222;
+    background-color: transparent;
+}
+
+.search-button {
+    width: 50px;
+    height: 100%;
+    background-color: #ee4d2d;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.search-button:hover {
+    background-color: #d84322;
+}
+
+.search-button i {
+    font-size: 14px;
+}

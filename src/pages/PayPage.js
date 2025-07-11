@@ -6,7 +6,7 @@ import MobileMenu from '../components/common/MobileMenu';
 import GoToTop from '../components/common/GoToTop';
 import { toast } from 'react-toastify';
 import { createOrder, getUserInfo } from '../container/services/userService';
-
+import { createVnpayPaymentUrl } from '../container/services/payService';
 function PayPage() {
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -94,6 +94,7 @@ function PayPage() {
     };
 
 
+    // SỬA Ở ĐÂY: Thay thế toàn bộ hàm handleSubmit
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm() || isPlacingOrder) {
@@ -105,38 +106,60 @@ function PayPage() {
 
         setIsPlacingOrder(true);
 
-        const orderData = {
-            shippingInfo: {
-                fullName: formData.fullName,
-                address: formData.address,
-                city: formData.city,
-                phoneNumber: formData.phoneNumber,
-            },
-            items: orderSummary.items,
-            paymentMethod: paymentMethod,
-            notes: formData.notes
-        };
-        const cleanOrderData = JSON.parse(JSON.stringify(orderData));
+        // --- XỬ LÝ KHI CHỌN THANH TOÁN COD ---
+        if (paymentMethod === 'COD') {
+            const orderData = {
+                shippingInfo: {
+                    fullName: formData.fullName,
+                    address: formData.address,
+                    city: formData.city,
+                    phoneNumber: formData.phoneNumber,
+                },
+                items: orderSummary.items,
+                paymentMethod: 'COD',
+                notes: formData.notes
+            };
 
+            try {
+                const res = await createOrder(orderData);
+                sessionStorage.removeItem('checkout_items');
+                toast.success("Đặt hàng thành công!");
+                // Sửa lại URL trả về để trang kết quả xử lý
+                navigate(`/order-success?orderCode=${res.data.order.orderCode}&isCod=true`);
+            } catch (error) {
+                toast.error(error.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại.");
+                setIsPlacingOrder(false); // Chỉ tắt loading khi có lỗi
+            }
+        }
 
-        try {
+        // --- XỬ LÝ KHI CHỌN THANH TOÁN VNPAY ---
+        else if (paymentMethod === 'VNPAY') {
+            const paymentData = {
+                amount: orderSummary.total,
+                orderDescription: `P&T Shop - Thanh toan don hang`,
+                language: 'vn',
+            };
 
-            const res = await createOrder(orderData);
+            try {
+                // Gọi hàm service đã import
+                const response = await createVnpayPaymentUrl(paymentData);
+                const data = response.data; // Dữ liệu thật từ Axios nằm trong response.data
 
-
-            sessionStorage.removeItem('checkout_items');
-
-
-            toast.success("Đặt hàng thành công!");
-            navigate(`/order-success?orderCode=${res.data.order.orderCode}`);
-
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại.");
-        } finally {
-            setIsPlacingOrder(false);
+                if (data.code === '00' && data.url) {
+                    // Xóa giỏ hàng tạm thời và chuyển hướng người dùng
+                    sessionStorage.removeItem('checkout_items');
+                    window.location.href = data.url;
+                } else {
+                    toast.error(data.message || "Lỗi: Không thể tạo yêu cầu thanh toán.");
+                    setIsPlacingOrder(false); // Tắt loading khi có lỗi
+                }
+            } catch (error) {
+                const errorMessage = error.response?.data?.message || error.message || "Không thể kết nối đến máy chủ thanh toán.";
+                toast.error(errorMessage);
+                setIsPlacingOrder(false); // Tắt loading khi có lỗi
+            }
         }
     };
-
 
 
     const renderSummaryItems = () => {
@@ -205,9 +228,16 @@ function PayPage() {
                                             {/* Phần phương thức thanh toán */}
                                             <div className="main-title" style={{ marginTop: '2rem' }}><h2>Phương thức thanh toán</h2></div>
                                             <div className="payment-methods" style={{ border: '1px solid #e1e1e1', padding: '1rem', borderRadius: '5px' }}>
+                                                {/* Thanh toán COD */}
                                                 <div className="payment-method-item" style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
                                                     <input type="radio" id="payment-cod" name="paymentMethod" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ marginRight: '10px', width: '18px', height: '18px' }} />
                                                     <label htmlFor="payment-cod" style={{ fontWeight: 500, cursor: 'pointer' }}>Thanh toán khi nhận hàng (COD)</label>
+                                                </div>
+
+                                                {/* SỬA Ở ĐÂY: Thêm lựa chọn thanh toán VNPay */}
+                                                <div className="payment-method-item" style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <input type="radio" id="payment-vnpay" name="paymentMethod" value="VNPAY" checked={paymentMethod === 'VNPAY'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ marginRight: '10px', width: '18px', height: '18px' }} />
+                                                    <label htmlFor="payment-vnpay" style={{ fontWeight: 500, cursor: 'pointer' }}>Thanh toán qua Cổng VNPay</label>
                                                 </div>
                                             </div>
                                         </div>

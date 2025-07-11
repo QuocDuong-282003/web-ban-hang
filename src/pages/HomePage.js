@@ -162,7 +162,8 @@ function HomePage() {
                                             <div className="card-body">
                                                 <h4 className="card-title">{product.name}</h4>
                                                 <p className="card-text description" style={{ fontWeight: 400 }}>{product.description}</p>
-                                                <Link to={product.detailLink} title={product.name} className="btn btn-buynow">Xem ngay <i className="fas fa-arrow-right" style={{ fontSize: '16px', marginLeft: '5px' }}></i></Link>
+                                                <Link to={product.detailLink} title={product.name} className="btn btn-buynow">Xem ngay
+                                                    <i className="fas fa-arrow-right" style={{ fontSize: '16px', marginLeft: '5px' }}></i></Link>
                                             </div>
                                         </div>
                                     </div>

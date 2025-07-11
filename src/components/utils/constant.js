@@ -16,6 +16,8 @@ export const path = {
     WISHLIST: '/wishlist',
     ORDER_SUCCESS: '/order-success',
     ACCOUNT: '/account',
+    //
+    POLICY: '/chinh-sach/:slug',
 
     // ADMIN SYSTEM BASE
     SYSTEM: '/system',

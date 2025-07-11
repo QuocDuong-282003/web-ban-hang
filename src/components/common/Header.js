@@ -1,19 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { userLogout } from '../../container/redux/userAuthSlice'; // Import action đăng xuất
+import { userLogout } from '../../container/redux/userAuthSlice';
+import { getCartAPI } from '../../container/services/userService';
+import { setCart, clearCart } from '../../components/store/actions/cartSlice';
+import { useClientSideSearch } from '../../container/hooks/useClientSideSearch';
+import Search from './Search/Search';
 import { toast } from 'react-toastify';
-
+import './Header.scss';
 function Header() {
     // Lấy trạng thái đăng nhập (isAuthenticated) và thông tin user từ Redux
     const { isAuthenticated, user } = useSelector(state => state.userAuth);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
+    const cartQuantity = useSelector(state => state.cart.totalQuantity);
+    const wishlistCount = useSelector(state => state.wishlist.itemIds.length);
     // State cho mobile menu
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+    const [searchQuery, setSearchQuery] = useState('');
 
+    useEffect(() => {
+        // Tạo một biến để kiểm tra xem component còn tồn tại không
+        // Tránh lỗi "Can't perform a React state update on an unmounted component"
+        let isMounted = true;
+
+        const syncCartWithBackend = async () => {
+            if (isAuthenticated) {
+                try {
+                    const response = await getCartAPI();
+                    // Chỉ dispatch nếu component vẫn còn trên cây DOM và có dữ liệu
+                    if (isMounted && response && response.data) {
+                        dispatch(setCart(response.data));
+                    }
+                } catch (error) {
+                    // Không làm gì cả, chỉ log lỗi. Không để lỗi này làm crash app.
+                    console.error("Failed to sync cart on mount:", error.response?.data?.message || error.message);
+                }
+            }
+        };
+
+        syncCartWithBackend();
+
+        // Hàm dọn dẹp (cleanup function) của useEffect
+        // Sẽ chạy khi component bị unmount
+        return () => {
+            isMounted = false;
+        };
+    }, [isAuthenticated, dispatch]);
     // HÀM XỬ LÝ ĐĂNG XUẤT
     const handleLogout = () => {
 
@@ -22,6 +56,12 @@ function Header() {
         toast.info("Bạn đã đăng xuất.");
 
         navigate('/');
+    };
+    const handleSearchSubmit = (event) => {
+        event.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
     };
 
     return (
@@ -93,31 +133,47 @@ function Header() {
                             <div className="mobile_cart visible-sm visible-xs">
                                 <Link to="/cart" className="header__second__cart--icon">
                                     <i className="fas fa-shopping-cart"></i>
-                                    <span id="header__second__cart--notice" className="header__second__cart--notice">3</span> {/* State for cart count */}
+                                    {/* <span id="header__second__cart--notice" className="header__second__cart--notice">3</span>  */}
+                                    {cartQuantity > 0 && <span className="header__second__cart--notice">{cartQuantity}</span>}
                                 </Link>
                                 <Link to="/wishlist" className="header__second__like--icon">
                                     <i className="far fa-heart"></i>
-                                    <span id="header__second__like--notice" className="header__second__like--notice">3</span> {/* State for wishlist count */}
+                                    {/* <span id="header__second__like--notice" className="header__second__like--notice">3</span>     */}
+                                    {wishlistCount > 0 && <span className="header__second__like--notice">{{ wishlistCount }}</span>}
                                 </Link>
                             </div>
                         </div>
-                        <div className="col-lg-6 m-auto pdt15">
-                            <form className="example" action="/products" onSubmit={(e) => { /* handle search submission */ }}>
-                                <input type="text" className="input-search" placeholder="Tìm kiếm.." name="search" />
+                        <div className="col-lg-6 m-auto pdt15 search-product">
+                            {/* <form className="example" action="/products" onSubmit={handleSearchSubmit}>
+                                <input type="text" className="input-search"
+                                    onChange={(event) => setSearchQuery(event.target.value)}
+                                    placeholder="Tìm kiếm.." name="search" />
                                 <button type="submit" className="search-btn"><i className="fa fa-search"></i></button>
-                            </form>
+                            </form> */}
+                            <Search />
                         </div>
+
+                        {/* <div className="search-product-shopee">
+                            <form className="search-form" action="/products" onSubmit={(e) => { /* handle submit >
+                                <input type="text" className="search-input" name="search" placeholder="Tìm sản phẩm, thương hiệu và tên shop..." />
+                                <button type="submit" className="search-button">
+                                    <i className="fa fa-search"></i>
+                                </button>
+                            </form>
+                        </div> */}
+
                         <div className="col-3 m-auto hidden-sm hidden-xs">
                             <div className="item-car clearfix">
                                 <Link to="/cart" className="header__second__cart--icon">
                                     <i className="fas fa-shopping-cart"></i>
-                                    <span id="header__second__cart--notice-desktop" className="header__second__cart--notice">3</span>
+                                    {cartQuantity > 0 && <span className="header__second__like--notice">{cartQuantity}</span>}
                                 </Link>
                             </div>
                             <div className="item-like clearfix">
                                 <Link to="/wishlist" className="header__second__like--icon">
                                     <i className="far fa-heart"></i>
-                                    <span id="header__second__like--notice-desktop" className="header__second__like--notice">3</span>
+                                    {/* SỬA LẠI ĐỂ HIỂN THỊ wishlistCount MỘT CÁCH ĐỘNG */}
+                                    {wishlistCount > 0 && <span id="header__second__like--notice-desktop" className="header__second__like--notice">{wishlistCount}</span>}
                                 </Link>
                             </div>
                         </div>

@@ -18,6 +18,7 @@ import ContactPage from './pages/ContactPage';
 import ListLikePage from './pages/ListLikePage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import AccountManagementPage from './pages/Account/AccountManagementPage';
+import PolicyPage from './components/Footer_Detail/PolicyPage';
 import { ToastContainer } from 'react-toastify';
 // Admin
 import AdminLayout from './container/AdminLayout';
@@ -60,6 +61,7 @@ function App() {
                 <Route path={path.SYSTEM_LOGIN} element={<LoginSystemPage />} />
                 <Route path={path.SYSTEM_FORGOT_LOGIN} element={<ForgotPasswordPage />} />
                 <Route path={path.SYSTEM_REGISTER} element={<RegisterSystemPage />} />
+                <Route path={path.POLICY} element={<PolicyPage />} />
                 {/* <Route path="/system/forgot-password" element={<ForgotPasswordPage />} /> */}
                 <Route path={path.SYSTEM} element={
                     <ProtectedRoute>

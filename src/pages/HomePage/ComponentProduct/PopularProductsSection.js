@@ -31,10 +31,10 @@ function PopularProductsSection({ products }) {
                                 <p className="card-text description flex-grow-1" style={{ fontWeight: 400 }}>
                                     {product.description}
                                 </p>
-
-                                <Link to={`/product-detail/${product._id}`} title={product.name} className="btn btn-buynow mt-auto align-self-start">
+                                <Link to="/products" className="btn btn-buynow mt-auto align-self-start">
                                     Xem ngay <i className="fas fa-arrow-right"></i>
                                 </Link>
+
                             </div>
                         </div>
                     </div>

@@ -209,7 +209,14 @@ export const getFilterOptions = () => {
     return API.get('/products/filters-data');
 };
 
+export const getProductByIds = (ids) => {
+    return API.post('/products/by-id', { ids });
+}
 
+//search
+export const getProductSuggestions = async (query) => {
+    return API.get('/products/suggestions', { params: { q: query } });
+}
 //cart
 export const getCartAPI = () => {
     return API.get('/cart-all');

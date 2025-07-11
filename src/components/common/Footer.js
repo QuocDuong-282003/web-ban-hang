@@ -77,27 +77,27 @@ function Footer() {
                         <h5 className="footer__heading mb-3">Chính sách</h5>
                         <ul className="footer__list list-unstyled">
                             <li className="footer__item mb-2">
-                                <Link to="/policy/warranty" className="footer__item--link">
+                                <Link to="/chinh-sach/bao-hanh" className="footer__item--link">
                                     Chính sách bảo hành
                                 </Link>
                             </li>
                             <li className="footer__item mb-2">
-                                <Link to="/policy/return" className="footer__item--link">
+                                <Link to="/chinh-sach/doi-tra" className="footer__item--link">
                                     Chính sách đổi trả
                                 </Link>
                             </li>
                             <li className="footer__item mb-2">
-                                <Link to="/policy/payment" className="footer__item--link">
+                                <Link to="/chinh-sach/thanh-toan" className="footer__item--link">
                                     Chính sách thanh toán
                                 </Link>
                             </li>
                             <li className="footer__item mb-2">
-                                <Link to="/policy/shipping" className="footer__item--link">
+                                <Link to="/chinh-sach/giao-nhan-hang" className="footer__item--link">
                                     Chính sách giao nhận hàng
                                 </Link>
                             </li>
                             <li className="footer__item">
-                                <Link to="/policy/privacy" className="footer__item--link">
+                                <Link to="/chinh-sach/bao-mat" className="footer__item--link">
                                     Chính sách bảo mật
                                 </Link>
                             </li>

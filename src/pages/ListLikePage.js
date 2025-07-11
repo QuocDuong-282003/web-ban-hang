@@ -4,12 +4,13 @@ import Footer from '../components/common/Footer';
 import MobileMenu from '../components/common/MobileMenu';
 import GoToTop from '../components/common/GoToTop';
 import ModalQuickView from '../components/common/ModalQuickView';
-import ProductItem from '../components/product/ProductItem'; // Tái sử dụng ProductItem
-
-import { apiProducts } from '../data/productsData'; // Lấy dữ liệu sản phẩm mẫu
+import ProductItem from '../components/product/ProductItem';
+import { useSelector } from 'react-redux';
+import { getProductByIds } from '../container/services/userService';
+import { apiProducts } from '../data/productsData';
+import { toast } from 'react-toastify';
 // import './ListLikePage.css';
 
-// Giả sử danh sách ID sản phẩm yêu thích được lưu ở đâu đó (localStorage, context, state)
 const sampleLikedProductIds = [1, 3, 5]; // Ví dụ
 
 function ListLikePage() {
@@ -17,13 +18,29 @@ function ListLikePage() {
     const [likedProducts, setLikedProducts] = useState([]);
     const [showQuickViewModal, setShowQuickViewModal] = useState(false);
     const [selectedProductForModal, setSelectedProductForModal] = useState(null);
+    const likedProductIds = useSelector(state => state.wishlist.itemIds);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Lọc sản phẩm yêu thích từ apiProducts
-        const favoriteItems = apiProducts.filter(product => sampleLikedProductIds.includes(product.id));
-        setLikedProducts(favoriteItems);
-    }, []); // Chạy một lần khi component mount
-
+        const fetchLikeProducts = async () => {
+            if (likedProductIds.length === 0) {
+                setLikedProducts([]);
+                setIsLoading(false);
+                return;
+            }
+            setIsLoading(true);
+            try {
+                const response = await getProductByIds(likedProductIds);
+                setLikedProducts(response.data || []);
+            } catch (error) {
+                toast.error("Không thể tải danh sách sản phẩm yêu thích.");
+                console.error("Lỗi khi tải sản phẩm yêu thích:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchLikeProducts();
+    }, [likedProductIds])
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
     const openQuickView = (product) => {
@@ -49,10 +66,15 @@ function ListLikePage() {
             <div className="listlike" style={{ paddingTop: '30px', paddingBottom: '30px' }}>
                 <div className="container">
                     <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>Danh Sách Yêu Thích</h2>
-                    {likedProducts.length > 0 ? (
+                    {isLoading ? (
+                        <p style={{ textAlign: 'center' }}>Đang tải danh sách yêu thích...</p>
+                    ) : likedProducts.length > 0 ? (
                         <div className="row">
+                            {/* Tái sử dụng component ProductItem để hiển thị */}
                             {likedProducts.map(product => (
-                                <ProductItem key={product.id} product={product} onQuickView={openQuickView} />
+                                <div className="col-lg-3 col-md-4 col-sm-6 col-6 mb-4" key={product._id}>
+                                    <ProductItem product={product} />
+                                </div>
                             ))}
                         </div>
                     ) : (

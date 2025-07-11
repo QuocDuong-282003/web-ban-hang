@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-// SỬA 1: Import useNavigate thay cho useHistory
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import queryString from 'query-string';
 
+// Import components
 import Header from '../../components/common/Header';
 import Footer from '../../components/common/Footer';
 import ProductFilter from '../../components/product/ProductFilter';
 import ProductItem from '../../components/product/ProductItem';
+
+// Import services and hooks
 import { getFilteredProducts } from '../../container/services/userService';
+import { useClientSideSearch } from '../../container/hooks/useClientSideSearch';
 import { toast } from 'react-toastify';
 
 const sortOptions = [
+
     { value: 'popular', label: 'Sản phẩm nổi bật' },
     { value: 'best-selling', label: 'Bán chạy nhất' },
     { value: 'newest', label: 'Mới nhất' },
@@ -22,59 +25,93 @@ const sortOptions = [
     { value: 'oldest', label: 'Cũ nhất' },
 ];
 
+const productSearchFn = (product, searchTerm) => {
+    if (!product || !product.name) {
+        return false;
+    }
+    return product.name.toLowerCase().includes(searchTerm);
+};
+
 function ProductPage() {
     const location = useLocation();
-    // SỬA 2: Dùng useNavigate() thay cho useHistory()
     const navigate = useNavigate();
 
-    const [products, setProducts] = useState([]);
-    const [pagination, setPagination] = useState({});
+    const [serverFilteredProducts, setServerFilteredProducts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const getFiltersFromURL = useCallback(() => {
         const params = queryString.parse(location.search);
         return {
+            q: params.q || '',
+            page: parseInt(params.page) || 1,
             priceRange: params.priceRange || '',
             brands: params.brands ? params.brands.split(',') : [],
             sort: params.sort || 'popular',
-            page: parseInt(params.page) || 1
         };
     }, [location.search]);
 
     const [filters, setFilters] = useState(getFiltersFromURL);
 
-    useEffect(() => {
-        const fetchAndSet = async () => {
-            const currentFilters = getFiltersFromURL();
-            setFilters(currentFilters);
-            setIsLoading(true);
-            try {
-                const response = await getFilteredProducts(currentFilters);
-                console.log('check response', response)
-                setProducts(response.data.data || []);
-                setPagination(response.data.pagination || {});
-            } catch (error) { toast.error("Lỗi: Không thể tải danh sách sản phẩm."); }
-            finally { setIsLoading(false); }
-        }
-        fetchAndSet();
-    }, [location.search, getFiltersFromURL]);
+    const {
+        items: displayedProducts,
+        totalPage,
+        goToPage,
+        setSearchTerm,
+        totalItems: totalClientFilteredItems,
+    } = useClientSideSearch(serverFilteredProducts, 12, productSearchFn);
 
-    const updateURL = (newFilters) => {
+    const updateURL = useCallback((newFilters) => {
         const currentFilters = getFiltersFromURL();
         const finalFilters = { ...currentFilters, ...newFilters };
+
+        if (newFilters.priceRange !== undefined || newFilters.brands !== undefined || newFilters.sort !== undefined) {
+            finalFilters.page = 1;
+        }
+
         const stringified = queryString.stringify(finalFilters, {
             skipEmptyString: true, skipNull: true, arrayFormat: 'comma'
         });
         navigate({ pathname: '/products', search: stringified });
-    };
+    }, [getFiltersFromURL, navigate]); // Các phụ thuộc của updateURL là getFiltersFromURL và navigate
 
-    // SỬA 4: Bỏ history ra khỏi dependency của useCallback vì nó không còn tồn tại
+    useEffect(() => {
+        const fetchServerData = async () => {
+            const currentFilters = getFiltersFromURL();
+            setFilters(currentFilters);
+            setIsLoading(true);
+
+            try {
+                const serverParams = {
+                    priceRange: currentFilters.priceRange,
+                    brands: currentFilters.brands,
+                    sort: currentFilters.sort,
+                };
+
+                const response = await getFilteredProducts(serverParams);
+                setServerFilteredProducts(response.data.data || []);
+            } catch (error) {
+                toast.error("Lỗi: Không thể tải danh sách sản phẩm.");
+                setServerFilteredProducts([]);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchServerData();
+    }, [filters.priceRange, filters.brands.join(','), filters.sort, getFiltersFromURL]);
+
+    useEffect(() => {
+        const currentFilters = getFiltersFromURL();
+        setSearchTerm(currentFilters.q || '');
+        goToPage(currentFilters.page);
+    }, [location.search, setSearchTerm, goToPage, getFiltersFromURL]);
+
+
     const handleFilterChange = useCallback((changedFilters) => {
-        updateURL({ ...changedFilters, page: 1 });
-    }, [getFiltersFromURL]); // Dependency bây giờ chỉ cần getFiltersFromURL và updateURL
+        updateURL(changedFilters);
+    }, [updateURL]);
 
     const handleSortChange = (e) => {
-        updateURL({ sort: e.target.value, page: 1 });
+        updateURL({ sort: e.target.value });
     };
 
     const handlePageChange = (page) => {
@@ -91,54 +128,39 @@ function ProductPage() {
                     </div>
                     <div className="col-lg-9">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h1>Tất cả sản phẩm</h1>
+                            {filters.q ? (
+                                <h1>Kết quả cho "{filters.q}"</h1>
+                            ) : (
+                                <h1>Tất cả sản phẩm</h1>
+                            )}
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                 <span style={{ marginRight: '10px' }}>Sắp xếp theo:</span>
-                                <select value={filters.sort} onChange={handleSortChange}>
+                                <select value={filters.sort} onChange={handleSortChange} className="form-control" style={{ width: 'auto' }}>
                                     {sortOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                 </select>
                             </div>
                         </div>
+                        <p>Tìm thấy {totalClientFilteredItems} sản phẩm phù hợp.</p>
+
                         <div className="row">
                             {isLoading ? (
-                                <div className="col-12 text-center"><p>Đang tải...</p></div>
-                            ) : (products && products.length > 0) ? (
-
-                                products.map(product => (
-
+                                <div className="col-12 text-center"><p>Đang tải sản phẩm...</p></div>
+                            ) : (displayedProducts && displayedProducts.length > 0) ? (
+                                displayedProducts.map(product => (
                                     <div className="col-lg-4 col-md-6 col-sm-6 col-6 mb-4" key={product._id}>
                                         <ProductItem product={product} />
                                     </div>
                                 ))
                             ) : (
-                                <div className="col-12 text-center"><p>Không tìm thấy sản phẩm nào.</p></div>
+                                <div className="col-12 text-center"><p>Không tìm thấy sản phẩm nào phù hợp với tiêu chí của bạn.</p></div>
                             )}
                         </div>
-                        {/* <div className="row">
-                            {isLoading
-                                ? Array.from({ length: 6 }).map((_, index) => (
-                                    <div className="col-lg-4 col-md-6 col-sm-6 col-6 mb-4" key={index}>
-                                        <div className="product-skeleton">Đang tải...</div>
-                                    </div>
-                                ))
-                                : products.length > 0 ? (
-                                    products.map(product => (
-                                        <div className="col-lg-4 col-md-6 col-sm-6 col-6 mb-4" key={product._id}>
-                                            <ProductItem product={product} />
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="col-12 text-center"><p>Không tìm thấy sản phẩm nào.</p></div>
-                                )
-                            }
-                        </div> */}
 
-                        {/* Phân trang */}
-                        {!isLoading && pagination.totalPages > 1 && (
+                        {!isLoading && totalPage > 1 && (
                             <nav style={{ marginTop: '30px', display: 'flex', justifyContent: 'center' }}>
                                 <ul className="pagination">
-                                    {Array.from({ length: pagination.totalPages }, (_, i) => (
-                                        <li key={i + 1} className={`page-item ${i + 1 === pagination.currentPage ? 'active' : ''}`}>
+                                    {Array.from({ length: totalPage }, (_, i) => (
+                                        <li key={i + 1} className={`page-item ${i + 1 === filters.page ? 'active' : ''}`}>
                                             <button className="page-link" onClick={() => handlePageChange(i + 1)}>{i + 1}</button>
                                         </li>
                                     ))}
@@ -152,4 +174,5 @@ function ProductPage() {
         </div>
     );
 }
+
 export default ProductPage;

@@ -1,0 +1,114 @@
+/* --- FILE: src/components/common/Search.scss --- */
+
+.search-container {
+    /* Quan trọng: Đặt container cha là relative để làm "điểm neo" */
+    position: relative;
+    width: 100%;
+
+    .search-form {
+        display: flex;
+        width: 100%;
+    }
+
+    .search-input {
+        flex-grow: 1;
+        border: 2px solid #ffc107;
+        padding: 10px;
+        border-right: none;
+        outline: none;
+        font-size: 1rem;
+        border-radius: 4px 0 0 4px;
+        /* Bo góc cho đẹp */
+    }
+
+    .search-button {
+        padding: 10px 15px;
+        background: #ffc107;
+        border: 2px solid #ffc107;
+        color: white;
+        cursor: pointer;
+        border-radius: 0 4px 4px 0;
+        /* Bo góc cho đẹp */
+    }
+
+    .search-suggestions {
+        /* Quan trọng: Định vị tuyệt đối để "nổi" lên trên */
+        position: absolute;
+        top: 100%;
+        /* Bắt đầu ngay dưới ô tìm kiếm */
+        left: 0;
+        right: 0;
+        background-color: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        /* Đảm bảo nó nằm trên các phần tử khác */
+        max-height: 400px;
+        overflow-y: auto;
+        border-radius: 0 0 4px 4px;
+        /* Bo góc dưới */
+
+        .suggestion-title {
+            padding: 10px 15px;
+            font-weight: bold;
+            color: #888;
+            background-color: #f7f7f7;
+            font-size: 0.9rem;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            transition: background-color 0.2s;
+
+            &:hover {
+                background-color: #f0f0f0;
+            }
+
+            img {
+                width: 40px;
+                height: 40px;
+                object-fit: cover;
+                margin-right: 15px;
+                border: 1px solid #eee;
+                border-radius: 2px;
+            }
+
+            .suggestion-info {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .suggestion-name {
+                font-size: 1rem;
+                line-height: 1.2;
+                /* Ngăn tên quá dài */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .suggestion-price {
+                font-size: 0.9rem;
+                color: #d0021b;
+                font-weight: 500;
+            }
+        }
+
+        .no-suggestion {
+            padding: 15px;
+            color: #888;
+            text-align: center;
+        }
+    }
+}
