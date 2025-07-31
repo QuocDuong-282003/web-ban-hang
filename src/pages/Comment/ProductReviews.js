@@ -1,20 +1,17 @@
-// --- THAY THẾ TOÀN BỘ FILE: src/pages/ProductDetailPage/ProductReviews.js ---
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { getProductReviews } from '../../container/services/userService';
 import ReviewItem from './ReviewItem';
 import ReviewForm from './ReviewForm';
-import './ProductReviews.css'; // <-- THÊM DÒNG NÀY ĐỂ IMPORT CSS
-
+import './ProductReviews.css';
 const ProductReviews = ({ productId, productRating, numReviews }) => {
-    // ... (Toàn bộ logic state và hàm của bạn giữ nguyên)
     const [reviews, setReviews] = useState([]);
     const [stats, setStats] = useState({ '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 });
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
-    const [activeFilter, setActiveFilter] = useState('all'); // Thêm state cho filter
+    const [activeFilter, setActiveFilter] = useState('all');
 
     const fetchReviews = useCallback(async (currentPage, isInitialLoad = false, filter = 'all') => {
         if (!productId) return;
@@ -23,7 +20,6 @@ const ProductReviews = ({ productId, productRating, numReviews }) => {
         else setIsFetchingMore(true);
 
         try {
-            // Lưu ý: Phần filter theo sao cần backend hỗ trợ, hiện tại ta chỉ làm giao diện
             const res = await getProductReviews(productId, { page: currentPage, limit: 5 });
             if (res && res.data) {
                 setReviews(prev => isInitialLoad ? res.data.reviews : [...prev, ...res.data.reviews]);
@@ -98,7 +94,6 @@ const ProductReviews = ({ productId, productRating, numReviews }) => {
                 </div>
             </div>
 
-            {/* Form để người dùng gửi đánh giá (tạm thời ẩn đi để tập trung vào hiển thị) */}
             <ReviewForm productId={productId} onReviewSubmitted={handleReviewSubmitted} />
 
             <div className="reviews-list mt-4">

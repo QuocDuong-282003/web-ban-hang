@@ -1,10 +1,26 @@
+// --- THAY THẾ TOÀN BỘ FILE: frontend/src/pages/OrderSuccessPage.js ---
+
 import React from 'react';
-import { Link } from 'react-router-dom';
-import './OrderSuccessPage.css';
+// Import thêm useLocation để lấy thông tin từ URL
+import { Link, useLocation } from 'react-router-dom';
+import './OrderSuccessPage.css'; // Giữ lại file CSS của bạn
+
+// Hook tiện ích để phân tích các tham số trên URL (query parameters)
+function useQuery() {
+    // React Router v6 cung cấp hook useLocation để làm việc này
+    return new URLSearchParams(useLocation().search);
+}
+
 function OrderSuccessPage() {
+    // Sử dụng hook vừa tạo để lấy các tham số
+    const query = useQuery();
+    const orderCode = query.get('orderCode'); // Lấy giá trị của 'orderCode' từ URL
+    const orderId = query.get('orderId');     // Lấy giá trị của 'orderId' từ URL
+
     return (
         <>
-            <header className="header order-success-header"> {/* Thêm class để style riêng nếu cần */}
+            {/* Giữ nguyên Header của bạn */}
+            <header className="header order-success-header">
                 <div className="container-fluid">
                     <div className="header__first">
                         <ul className="nav nav__first">
@@ -24,16 +40,13 @@ function OrderSuccessPage() {
                         <div className="header__second__logo">
                             <Link to="/"><img src="./assets/img/logo/logomain.png" alt="P&T Shop Logo" className="header__second__logo--img" /></Link>
                         </div>
-                        <div className="header__second__search">
-                            {/* Search bar có thể không cần thiết trên trang success */}
-                        </div>
+                        <div className="header__second__search"></div>
                         <div className="header__second__like">
                             <Link to="/wishlist" className="header__second__like--icon"><i className="fi-rs-heart"></i></Link>
                         </div>
                         <div className="header__second__cart">
                             <Link to="/cart" className="header__second__cart--icon">
                                 <i className="fi-rs-shopping-bag"></i>
-                                {/* Cart notice nên được cập nhật từ state global */}
                                 <span className="header__second__cart--notice">0</span>
                             </Link>
                         </div>
@@ -46,27 +59,54 @@ function OrderSuccessPage() {
                             <li className="nav-item nav-item__third">
                                 <Link className="nav-link nav-link__third" to="/products">Tất cả sản phẩm</Link>
                             </li>
-                            {/* Các mục menu khác có thể ẩn đi trên trang success */}
                         </ul>
                     </div>
                 </div>
             </header>
 
             <div className="container">
+                {/* Giữ nguyên phần content chính, chỉ thêm logic hiển thị */}
                 <div className="content" style={{ height: 'auto', minHeight: '200px', boxShadow: '0 1px 6px 0 rgb(32 33 36 / 28%)', marginTop: '150px', marginBottom: '150px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '30px' }}>
                     <i className="fas fa-check-circle" style={{ fontSize: '5rem', color: 'green', marginBottom: '20px' }}></i>
                     <h1 style={{ fontSize: '2rem' }}>Đặt hàng thành công!</h1>
                     <p style={{ fontSize: '1.1rem', margin: '15px 0' }}>Cảm ơn bạn đã mua hàng tại P&T Shop. Chúng tôi sẽ xử lý đơn hàng của bạn sớm nhất.</p>
-                    <Link style={{ fontSize: '1.1rem', textDecoration: 'underline', color: '#007bff' }} to="/">Tiếp tục mua hàng</Link>
+
+                    {/* THÊM MỚI: Hiển thị mã đơn hàng nếu có */}
+                    {orderCode && (
+                        <p style={{ fontSize: '1.1rem' }}>Mã đơn hàng của bạn là: <strong style={{ color: '#d9534f' }}>{orderCode}</strong></p>
+                    )}
+
+                    <p style={{ fontSize: '1rem', color: '#666' }}>Một email xác nhận với chi tiết đơn hàng đã được gửi đến bạn.</p>
+
+                    {/* THÊM MỚI: Các nút hành động */}
+                    <div className="order-success-actions" style={{ marginTop: '30px' }}>
+                        {/* Hiển thị nút "Theo dõi đơn hàng" chỉ khi có orderId */}
+                        {orderId && (
+                            <Link
+                                to={`/order-tracking/${orderId}`}
+                                className="btn btn-primary"
+                                style={{ margin: '0 10px', padding: '10px 20px', textDecoration: 'none' }}
+                            >
+                                Theo dõi đơn hàng
+                            </Link>
+                        )}
+                        <Link
+                            to="/"
+                            className="btn btn-outline-secondary"
+                            style={{ margin: '0 10px', padding: '10px 20px', textDecoration: 'none' }}
+                        >
+                            Tiếp tục mua sắm
+                        </Link>
+                    </div>
                 </div>
             </div>
 
-            <footer className="footer order-success-footer"> {/* Thêm class để style riêng nếu cần */}
+            {/* Giữ nguyên Footer của bạn */}
+            <footer className="footer order-success-footer">
                 <div className="container">
-                    {/* Footer có thể đơn giản hơn trên trang success */}
                 </div>
                 <div className="footer__bottom">
-                    <p className="footer__text">© Bản quyền thuộc về P&T Shop</p>
+                    <p className="footer__text">© Bản quyền thuộc về Quốc Dương</p>
                 </div>
             </footer>
         </>

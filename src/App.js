@@ -20,6 +20,8 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import AccountManagementPage from './pages/Account/AccountManagementPage';
 import PolicyPage from './components/Footer_Detail/PolicyPage';
 import { ToastContainer } from 'react-toastify';
+import OrderTrackingPage from './pages/OrderTrackingPage';
+
 // Admin
 import AdminLayout from './container/AdminLayout';
 import Dashboard from './container/pages/Dashboard';
@@ -39,6 +41,7 @@ import ProtectedRoute from './container/Router/ProtectedRoute';
 import LoginSystemPage from './container/Login/LoginSystemPage ';
 import ForgotPasswordPage from './container/Login/ForgotPasswordPage';
 import RegisterSystemPage from './container/Login/RegisterSystemPage';
+
 function App() {
     return (
         <Router>
@@ -62,6 +65,7 @@ function App() {
                 <Route path={path.SYSTEM_FORGOT_LOGIN} element={<ForgotPasswordPage />} />
                 <Route path={path.SYSTEM_REGISTER} element={<RegisterSystemPage />} />
                 <Route path={path.POLICY} element={<PolicyPage />} />
+                <Route path={path.ORDER_TRACKING} element={<OrderTrackingPage />} />
                 {/* <Route path="/system/forgot-password" element={<ForgotPasswordPage />} /> */}
                 <Route path={path.SYSTEM} element={
                     <ProtectedRoute>

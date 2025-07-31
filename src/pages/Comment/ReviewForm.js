@@ -1,8 +1,7 @@
-// --- THAY THẾ TOÀN BỘ FILE: src/pages/ProductDetailPage/ReviewForm.js ---
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { createReview } from '../../container/services/userService';
-import './ReviewForm.css'; // <-- THÊM DÒNG NÀY
+import './ReviewForm.css';
 
 const ReviewForm = ({ productId, onReviewSubmitted }) => {
     const [rating, setRating] = useState(5);

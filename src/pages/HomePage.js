@@ -59,9 +59,7 @@ function HomePage() {
 
     const closeQuickView = () => {
         setShowQuickViewModal(false);
-        setSelectedProductForModal(null);
-        const overlay = document.querySelector('.overlay');
-        if (overlay) overlay.classList.add('hidden');
+
     };
 
     useEffect(() => {
@@ -98,7 +96,7 @@ function HomePage() {
 
     return (
         <div style={{ backgroundColor: 'rgb(248, 242, 236)' }}>
-            <div className={`overlay ${isMobileMenuOpen || showQuickViewModal ? '' : 'hidden'}`} onClick={isMobileMenuOpen ? toggleMobileMenu : closeQuickView}></div>
+
             <MobileMenu isOpen={isMobileMenuOpen} toggleMenu={toggleMobileMenu} />
             <Header />
 

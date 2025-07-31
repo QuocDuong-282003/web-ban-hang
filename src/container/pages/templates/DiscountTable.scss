@@ -42,15 +42,30 @@
         margin-bottom: 10px;
     }
     .data-table{
-        .status-active{
-              color: green;
-              font-weight: bold;
-        }
-        .status-inactive{
-            color: red;
-            font-weight: bold;
+        
+    
+    .status-hoạt-động {
+        color: #155724;
+        font-weight: bolder;
 
-        }
+    }
+    .status-hết-hạn{
+        color: #e3051b; 
+        text-decoration: line-through; 
+        font-weight: bolder;
+
+    }
+
+    
+    .status-chua-bat-dau {
+        color: #856404; 
+    }
+    
+   
+    .status-vô-hiệu-hóa {
+        color: #5f0862; 
+        font-weight: bolder;
+    }
         .btn-discount-action{
        
             .btn-edit{

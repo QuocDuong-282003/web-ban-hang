@@ -7,7 +7,7 @@ import Footer from '../../components/common/Footer';
 import MobileMenu from '../../components/common/MobileMenu';
 import GoToTop from '../../components/common/GoToTop';
 import ProductItem from '../../components/product/ProductItem';
-import ProductReviews from '../Comment/ProductReviews'; // <-- IMPORT COMPONENT MỚI
+import ProductReviews from '../Comment/ProductReviews';
 
 import { getProductById, getRelatedProducts, addToCart } from '../../container/services/userService';
 import './ProductDetailPage.css';

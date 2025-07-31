@@ -1,4 +1,3 @@
-// --- FILE: src/components/Discount/DiscountTable.js (REWRITTEN FOR CLARITY & CORRECTNESS) ---
 
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
@@ -12,8 +11,7 @@ import {
     updateDiscount,
     deleteDiscount
 } from '../../services/userService';
-import DiscountModal from "../ModalDiscount/DiscountModal"; // Import modal
-
+import DiscountModal from "../ModalDiscount/DiscountModal";
 
 
 const discountFilterFn = (discount, searchTerm) => {
@@ -104,7 +102,6 @@ const DiscountTable = () => {
     const openEditModal = (discount) => { setCurrentDiscount(discount); setIsModalOpen(true); };
     const closeModal = () => { setIsModalOpen(false); setCurrentDiscount(null); };
 
-    // Hàm xử lý sự kiện click trang của ReactPaginate
     const handlePageClick = (event) => {
         goToPage(event.selected + 1);
     };
@@ -127,12 +124,10 @@ const DiscountTable = () => {
                 </div>
             </div>
 
-            {/* Thống kê */}
             <div className="list-summary">
                 {`Hiển thị ${displayedDiscounts.length} trong tổng số ${filteredCount} kết quả.`}
             </div>
 
-            {/* Bảng dữ liệu */}
             <table className="data-table">
                 <thead>
                     <tr>
@@ -149,7 +144,7 @@ const DiscountTable = () => {
                 </thead>
                 <tbody>
                     {isLoading ? (
-                        <tr><td colSpan="8" className="loading-cell">Đang tải...</td></tr>
+                        <tr><td colSpan="9" className="loading-cell">Đang tải...</td></tr>
                     ) : displayedDiscounts.length > 0 ? (
                         displayedDiscounts.map((discount, index) => (
                             <tr key={discount._id}>
@@ -157,12 +152,19 @@ const DiscountTable = () => {
                                 <td>{discount.code}</td>
                                 <td>{discount.description}</td>
                                 <td>{discount.discountType === 'percent' ? 'Phần trăm' : 'Cố định'}</td>
-                                <td>{discount.value.toLocaleString()} {discount.discountType === 'percent' ? '%' : 'VND'}</td>
+
+                                <td>
+                                    {(typeof discount.value === 'number' ? discount.value : 0).toLocaleString('vi-VN')}
+                                    {discount.discountType === 'percent' ? ' %' : ' VND'}
+                                </td>
+
                                 <td>{new Date(discount.startDate).toLocaleDateString('vi-VN')}</td>
                                 <td>{new Date(discount.endDate).toLocaleDateString('vi-VN')}</td>
-                                <td className={discount.isActive ? 'status-active' : 'status-inactive'}>
-                                    {discount.isActive ? 'Kích hoạt' : 'Vô hiệu'}
+
+                                <td className={`status-${(discount.status || '').replace(/\s+/g, '-').toLowerCase()}`}>
+                                    {discount.status}
                                 </td>
+
                                 <td className="btn-discount-action">
                                     <button className="btn-edit" onClick={() => openEditModal(discount)}>Sửa</button>
                                     <button className="btn-delete" onClick={() => handleDelete(discount._id)}>Xóa</button>
@@ -170,21 +172,12 @@ const DiscountTable = () => {
                             </tr>
                         ))
                     ) : (
-                        <tr><td colSpan="8" className="no-data-cell">Không có dữ liệu.</td></tr>
+                        <tr><td colSpan="9" className="no-data-cell">Không có dữ liệu.</td></tr>
                     )}
                 </tbody>
             </table>
 
-            {/* Phân trang */}
-            {/* <ReactPaginate
-                previousLabel={'<'}
-                nextLabel={'>'}
-                pageCount={totalPage}
-                onPageChange={handlePageClick}
-                containerClassName={'pagination-container'}
-                activeClassName={'active'}
-                forcePage={currentPage - 1}
-            /> */}
+
             {totalPage > 1 && (
                 <div className="category-pagination">
                     {Array.from({ length: totalPage }, (_, i) => (

@@ -89,7 +89,7 @@ function Header() {
                                                 <Link to="/account">Tài khoản của tôi</Link>
                                             </li>
                                             <li className="nav-item__first-item">
-                                                <Link to="/account/orders">Đơn mua</Link>
+                                                <Link to="/account?tab=order">Đơn mua</Link>
                                             </li>
 
                                             {/* ===  NÚT ĐĂNG XUẤT === */}

@@ -150,6 +150,13 @@ export const updateOrderStatus = async (orderId, statusData) => {
     return API.put(`/update-order/${orderId}/status`, statusData);
 }
 
+export const getOrderById = (orderId) => {
+    return API.get(`/orders/${orderId}`);
+}
+export const getMyOrders = () => {
+    return API.get('/my-orders');
+};
+
 
 // review rating
 const getAuthHeaders = () => {

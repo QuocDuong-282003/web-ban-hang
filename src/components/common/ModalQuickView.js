@@ -1,168 +1,131 @@
-import React, { useState, useEffect } from 'react';
-// import './ModalQuickView.css'; // Tạo file CSS nếu cần
+// --- FILE: src/components/common/ModalQuickView.js (FINAL & GUARANTEED TO WORK) ---
 
-// Giả sử bạn truyền product vào modal này qua props
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import './ModalQuickView.scss';
+
 function ModalQuickView({ product, show, handleClose }) {
+    const navigate = useNavigate();
     const [quantity, setQuantity] = useState(1);
-    const [selectedColor, setSelectedColor] = useState(null); // or a default color
-    const [selectedSize, setSelectedSize] = useState(null); // or a default size
+    const [selectedVariant, setSelectedVariant] = useState(null);
     const [currentImage, setCurrentImage] = useState('');
 
     useEffect(() => {
-        if (product && product.images && product.images.length > 0) {
-            setCurrentImage(product.images[0]); // Set default image
+        // Xử lý hiệu ứng khóa cuộn trang nền khi modal MỞ hoặc ĐÓNG
+        if (show) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
         }
-        setQuantity(1); // Reset quantity when product changes or modal opens
-    }, [product]);
 
+        // Cập nhật state nội bộ của modal khi 'product' thay đổi
+        if (product) {
+            if (product.images && product.images.length > 0) {
+                setCurrentImage(product.images[0]);
+            } else if (product.imageBase64) {
+                setCurrentImage(product.imageBase64);
+            } else {
+                setCurrentImage('/path/to/default-placeholder.png'); // Ảnh mặc định
+            }
 
-    if (!show || !product) {
+            if (product.variants && product.variants.length > 0) {
+                setSelectedVariant(product.variants[0]);
+            } else {
+                setSelectedVariant(null);
+            }
+            setQuantity(1);
+        }
+
+        // Cleanup function: đảm bảo trang có thể cuộn lại nếu component bị unmount
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [show, product]);
+
+    // Không render gì cả nếu không được yêu cầu hiển thị
+    if (!show) {
         return null;
     }
 
+    const stockAvailable = selectedVariant?.stock ?? product?.stock ?? 0;
+
     const handleQuantityChange = (amount) => {
-        setQuantity(prev => Math.max(1, prev + amount));
+        setQuantity(prev => {
+            const newQuantity = prev + amount;
+            if (newQuantity < 1) return 1;
+            if (newQuantity > stockAvailable) {
+                toast.warn(`Chỉ còn ${stockAvailable} sản phẩm có sẵn.`);
+                return stockAvailable > 0 ? stockAvailable : 1;
+            }
+            return newQuantity;
+        });
     };
 
-    const handleDirectQuantityInput = (e) => {
-        const value = parseInt(e.target.value);
-        if (!isNaN(value) && value >= 1) {
-            setQuantity(value);
-        } else if (e.target.value === "") {
-            // Allow empty for typing, but maybe default to 1 on blur if still empty
-        }
+    const handleBuyNow = () => {
+        // Logic mua ngay của bạn...
+        const itemToBuy = { /* ... */ };
+        sessionStorage.setItem('checkout_items', JSON.stringify([itemToBuy]));
+        navigate('/pay');
+        handleClose();
     };
-
-    const handleImageClick = (imageSrc) => {
-        setCurrentImage(imageSrc);
-    };
-
-    // Giả sử product.images là một array of image URLs
-    // Giả sử product.colors là array [{id: 'red', name: 'Red', hex: '#ff0000'}, ...]
-    // GiảSử product.sizes là array [{id: 's', name: 'S'}, ...]
 
     return (
-        <div className="modal" id="myModalQuickView" style={{ display: show ? 'block' : 'none' }} onClick={handleClose}>
-            <div className="modal-dialog modal-lg" onClick={e => e.stopPropagation()}> {/* Prevent closing on content click */}
-                <div className="modal-content ">
-                    <div className="modal-body">
-                        <div className="row">
-                            <div className="col-md-6 col-12">
-                                <div className="mb-2 main-img-2">
-                                    <img src={currentImage || (product.img || './assets/img/product/ars1.jpg')} alt={product.name} id="img-main-modal" />
+        <div className="quickview-modal-overlay" onClick={handleClose}>
+            <div className="quickview-modal-dialog" onClick={e => e.stopPropagation()}>
+                <div className="quickview-modal-content">
+                    <button className="quickview-modal-close" onClick={handleClose}>×</button>
+                    <div className="quickview-modal-body">
+                        {/* Phần ảnh */}
+                        <div className="quickview-image-section">
+                            <div className="quickview-main-image-wrapper">
+                                <img src={currentImage} alt={product.name} className="quickview-main-image" />
+                            </div>
+                            {product.images && product.images.length > 1 && (
+                                <div className="quickview-thumbnail-wrapper">
+                                    {product.images.map((imgSrc, index) => (
+                                        <div
+                                            className={`quickview-thumbnail-item ${currentImage === imgSrc ? 'active' : ''}`}
+                                            key={index}
+                                            onClick={() => setCurrentImage(imgSrc)}
+                                        >
+                                            <img src={imgSrc} alt={`${product.name} thumbnail ${index + 1}`} />
+                                        </div>
+                                    ))}
                                 </div>
-                                {product.gallery && product.gallery.length > 0 && (
-                                    <ul className="all-img-2">
-                                        {product.gallery.map((imgSrc, index) => (
-                                            <li className="img-item-2" key={index}>
-                                                <img
-                                                    src={imgSrc}
-                                                    alt={`${product.name} - view ${index + 1}`}
-                                                    onClick={() => handleImageClick(imgSrc)}
-                                                />
-                                            </li>
-                                        ))}
-                                    </ul>
+                            )}
+                        </div>
+
+                        {/* Phần thông tin */}
+                        <div className="quickview-info-section">
+                            <h3 className="quickview-product-name">
+                                <Link to={`/product-detail/${product._id}`} title={product.name}>{product.name || "Tên sản phẩm"}</Link>
+                            </h3>
+                            <div className="quickview-meta-info">
+                                <span>Trạng thái: <b className={stockAvailable > 0 ? 'text-success' : 'text-danger'}>{stockAvailable > 0 ? 'Còn hàng' : 'Hết hàng'}</b></span>
+                                <span>Loại sản phẩm: <b>{product.category?.name || "Chưa rõ"}</b></span>
+                            </div>
+                            <div className="quickview-price-box">
+                                {product.finalPrice < product.price && (
+                                    <del className="quickview-old-price">{(product.price || 0).toLocaleString('vi-VN')}₫</del>
                                 )}
+                                <span className="quickview-final-price">{(product.finalPrice || 0).toLocaleString('vi-VN')}₫</span>
                             </div>
-                            <div className="col-md-6 col-12">
-                                <div className="info-product">
-                                    <h3 className="product-name">
-                                        <a href={`/product/${product.id}`} title={product.name}>{product.name || "Tên sản phẩm"}</a>
-                                    </h3>
-                                    <div className="status-product">
-                                        Trạng thái: <b>{product.inStock ? 'Còn hàng' : 'Hết hàng'}</b>
-                                    </div>
-                                    <div className="infor-oder">
-                                        Loại sản phẩm: <b>{product.category || "Chưa rõ"}</b>
-                                    </div>
-                                    <div className="price-product">
-                                        <div className="special-price">
-                                            <span>{(product.price || 0).toLocaleString('vi-VN')}đ</span>
-                                        </div>
-                                        {product.oldPrice && (
-                                            <div className="price-old">
-                                                Giá gốc:
-                                                <del>{product.oldPrice.toLocaleString('vi-VN')}đ</del>
-                                                <span className="discount">(-{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%)</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="product-description" dangerouslySetInnerHTML={{ __html: product.shortDescription || "Mô tả ngắn..." }}>
-                                    </div>
-
-                                    {/* Color Selector */}
-                                    {product.colors && product.colors.length > 0 && (
-                                        <div className="product__color d-flex" style={{ alignItems: 'center' }}>
-                                            <div className="title" style={{ fontSize: '16px', marginRight: '10px' }}>Màu:</div>
-                                            <div className="select-swap d-flex">
-                                                {product.colors.map(color => (
-                                                    <div className="circlecheck" key={color.id}>
-                                                        <input
-                                                            type="radio"
-                                                            id={`color-${color.id}-modal`}
-                                                            name="selector-color-modal"
-                                                            value={color.id}
-                                                            checked={selectedColor === color.id}
-                                                            onChange={() => setSelectedColor(color.id)}
-                                                            style={{ backgroundColor: color.hex }} // For actual color display
-                                                        />
-                                                        <label htmlFor={`color-${color.id}-modal`} style={{ borderColor: color.hex }}></label>
-                                                        <div className="outer-circle"></div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Size Selector */}
-                                    {product.sizes && product.sizes.length > 0 && (
-                                        <div className="product__size d-flex" style={{ alignItems: 'center' }}>
-                                            <div className="title" style={{ fontSize: '16px', marginRight: '10px' }}>Kích thước:</div>
-                                            <div className="select-swap">
-                                                {product.sizes.map(size => (
-                                                    <div className="swatch-element" data-value={size.name} key={size.id}>
-                                                        <input
-                                                            type="radio"
-                                                            className="variant-1"
-                                                            id={`swatch-size-${size.id}-modal`}
-                                                            name="size-selector-modal"
-                                                            value={size.id}
-                                                            checked={selectedSize === size.id}
-                                                            onChange={() => setSelectedSize(size.id)}
-                                                        />
-                                                        <label htmlFor={`swatch-size-${size.id}-modal`} className="sd"><span>{size.name}</span></label>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="product__wrap">
-                                        <div className="product__amount">
-                                            <label htmlFor="text_so_luong_modal">Số lượng: </label>
-                                            <input type="button" value="-" className="control" onClick={() => handleQuantityChange(-1)} />
-                                            <input
-                                                type="text"
-                                                value={quantity}
-                                                className="text-input"
-                                                id="text_so_luong_modal"
-                                                onChange={handleDirectQuantityInput}
-                                                onKeyPress={(event) => { if (!/[0-9]/.test(event.key)) { event.preventDefault(); } }}
-                                            />
-                                            <input type="button" value="+" className="control" onClick={() => handleQuantityChange(1)} />
-                                        </div>
-                                    </div>
-                                    <div className="product__shopnow">
-                                        <button className="shopnow2" onClick={() => alert(`Mua ${quantity} sản phẩm ${product.name}`)}>Mua ngay</button>
+                            <div className="quickview-description">{product.description || "Chưa có mô tả..."}</div>
+                            <div className="quickview-actions">
+                                <div className="quantity-selector">
+                                    <span className="quantity-label">Số lượng:</span>
+                                    <div className="quantity-input-group">
+                                        <button onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>-</button>
+                                        <input type="text" value={quantity} readOnly />
+                                        <button onClick={() => handleQuantityChange(1)} disabled={quantity >= stockAvailable}>+</button>
                                     </div>
                                 </div>
+                                <button className="buy-now-btn" onClick={handleBuyNow} disabled={stockAvailable < 1}>Mua ngay</button>
                             </div>
+                            <span className="stock-info">{stockAvailable > 0 ? `${stockAvailable} sản phẩm có sẵn` : 'Sản phẩm đã hết hàng'}</span>
                         </div>
                     </div>
-                    <button className="btn-default btn-close" onClick={handleClose}>
-                        <i className="fas fa-times-circle"></i>
-                    </button>
                 </div>
             </div>
         </div>

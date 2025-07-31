@@ -48,7 +48,7 @@
 .summary-rating .stars-wrapper .fa-star {
     font-size: 1.2rem;
     color: #FFBF00;
-    /* Dùng màu vàng sáng hơn */
+
 }
 
 .summary-filters {
@@ -77,7 +77,6 @@
     color: #ee4d2d;
 }
 
-/* Sửa lại CSS cho nút active */
 .summary-filters .filter-btn.active {
     background-color: #fff;
     color: #ee4d2d;

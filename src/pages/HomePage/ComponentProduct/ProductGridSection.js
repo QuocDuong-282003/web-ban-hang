@@ -1,4 +1,3 @@
-// --- THAY THẾ TOÀN BỘ FILE: src/pages/HomePage/ComponentProduct/ProductGridSection.js ---
 
 import React from 'react';
 import { Link } from 'react-router-dom';

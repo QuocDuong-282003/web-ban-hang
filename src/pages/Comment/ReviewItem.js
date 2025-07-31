@@ -1,6 +1,5 @@
-// --- THAY THẾ TOÀN BỘ FILE: src/pages/ProductDetailPage/ReviewItem.js ---
 import React from 'react';
-import './ReviewItem.css'; // <-- THÊM DÒNG NÀY
+import './ReviewItem.css';
 
 const ReviewItem = ({ review }) => {
     const renderStars = (rating) => {
@@ -11,8 +10,7 @@ const ReviewItem = ({ review }) => {
         return stars;
     };
 
-    // Bạn cần đảm bảo model User trả về ảnh đúng định dạng.
-    // Giả sử user.images là một mảng và ảnh đại diện là ảnh đầu tiên.
+    //
     const userImage = (review.user?.images && review.user.images.length > 0)
         ? `data:${review.user.images[0].contentType};base64,${review.user.images[0].data.toString('base64')}`
         : '/assets/img/product/noavatar.png';
