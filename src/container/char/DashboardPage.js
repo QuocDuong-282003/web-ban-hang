@@ -1,4 +1,3 @@
-// --- TẠO FILE MỚI: src/pages/DashboardPage.js ---
 
 import React, { useState, useEffect } from 'react';
 import { Bar, Pie } from 'react-chartjs-2';
@@ -8,7 +7,6 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 import { getOverviewStats, getSalesStats, getOrderStatusStats } from '../services/dashboardService';
-//import './Dashboard.scss'; // Tạo file SCSS để style
 
 // Component con để hiển thị các thẻ thống kê
 const StatCard = ({ title, value, className = '' }) => (
@@ -22,7 +20,7 @@ const DashboardPage = () => {
     const [overview, setOverview] = useState(null);
     const [salesData, setSalesData] = useState(null);
     const [statusData, setStatusData] = useState(null);
-    const [salesPeriod, setSalesPeriod] = useState('day'); // Mặc định xem theo ngày
+    const [salesPeriod, setSalesPeriod] = useState('day');
 
     // Hook để tải dữ liệu tổng quan và biểu đồ tròn (chỉ chạy 1 lần)
     useEffect(() => {

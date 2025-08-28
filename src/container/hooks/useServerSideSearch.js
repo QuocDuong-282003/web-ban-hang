@@ -1,4 +1,3 @@
-// --- FILE: src/hooks/useServerSideSearch.js ---
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 

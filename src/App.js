@@ -31,7 +31,7 @@ import User from './container/pages/User';
 import ListCategory from './container/pages/templates/ListCategory';
 import Extra from './container/pages/templates/Extra';
 import Review from './container/pages/templates/Review';
-import Grid from './container/pages/templates/Grid';
+import ContactTable from './container/pages/templates/ContactTable';
 import Maps from './container/pages/templates/Maps';
 import ProductTable from './container/pages/templates/ProductTable';
 import DiscountTables from './container/pages/templates/DiscountTable';
@@ -82,7 +82,7 @@ function App() {
                     <Route path="template-news" element={<News />} />
                     <Route path="template-extra" element={<Extra />} />
                     <Route path="template-forms" element={<Review />} />
-                    <Route path="template-grid" element={<Grid />} />
+                    <Route path="template-contact" element={<ContactTable />} />
                     <Route path="template-maps" element={<Maps />} />
                     <Route path="template-product-tables" element={<ProductTable />} />
                     <Route path="template-discount" element={<DiscountTables />} />

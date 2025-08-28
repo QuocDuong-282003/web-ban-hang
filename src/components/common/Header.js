@@ -80,7 +80,11 @@ function Header() {
                                 // GIAO DIỆN KHI  ĐĂNG NHẬP
                                 <ul className="nav nav__first right">
                                     <li className="nav-item nav-item__first nav-item__first-user">
-                                        <img src="/assets/img/product/noavatar.png" alt="" className="nav-item__first-img" />
+                                        <img
+                                            src={user.avatar ? user.avatar : "/assets/img/product/noavatar.png"}
+                                            alt=""
+                                            className="nav-item__first-img"
+                                        />
                                         <span className="nav-item__first-name">{user.name}</span>
 
                                         {/* ĐÂY LÀ MENU DROPDOWN */}

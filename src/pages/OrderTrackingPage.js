@@ -1,17 +1,12 @@
-// --- THAY THẾ TOÀN BỘ FILE: frontend/src/pages/OrderTrackingPage.js ---
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getOrderById } from '../container/services/userService'; // Đường dẫn có thể cần điều chỉnh
+import { getOrderById, cancelMyOder, createReview } from '../container/services/userService';
 import { toast } from 'react-toastify';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import './OrderTrackingPage.scss';
 
-// ======================================================================
-// COMPONENT MỚI: DÒNG THỜI GIAN THEO DÕI ĐƠN HÀNG
-// ======================================================================
 const OrderTimeline = ({ statusHistory, currentStatus }) => {
-    // Định nghĩa tất cả các mốc quan trọng của đơn hàng
     const milestones = [
         { status: 'pending', label: 'Đơn hàng đã đặt', icon: 'fa-receipt' },
         { status: 'processing', label: 'Đã xác nhận', icon: 'fa-box-open' },
@@ -19,20 +14,17 @@ const OrderTimeline = ({ statusHistory, currentStatus }) => {
         { status: 'delivered', label: 'Giao hàng thành công', icon: 'fa-check-circle' }
     ];
 
-    // Tạo một map để lưu thời gian của mỗi trạng thái đã xảy ra
     const historyMap = new Map();
     statusHistory.forEach(history => {
         historyMap.set(history.status, new Date(history.updatedAt));
     });
 
-    // Tìm vị trí của trạng thái hiện tại
     const currentStatusIndex = milestones.findIndex(m => m.status === currentStatus);
 
-    // Xử lý trường hợp đơn hàng bị hủy
     if (currentStatus === 'cancelled') {
         const cancelledTime = historyMap.get('cancelled');
         return (
-            <div className="alert alert-danger my-4">
+            <div className=" my-4">
                 <h4>Đơn hàng đã bị hủy</h4>
                 {cancelledTime && <p>vào lúc {cancelledTime.toLocaleString('vi-VN')}</p>}
             </div>
@@ -61,67 +53,6 @@ const OrderTimeline = ({ statusHistory, currentStatus }) => {
                     </div>
                 );
             })}
-            <style>{`
-                .order-timeline {
-                    display: flex;
-                    flex-direction: column;
-                }
-                .timeline-step {
-                    display: flex;
-                    align-items: flex-start;
-                    position: relative;
-                    padding-bottom: 30px;
-                }
-                .timeline-step:not(:last-child)::before {
-                    content: '';
-                    position: absolute;
-                    left: 20px;
-                    top: 40px;
-                    width: 2px;
-                    height: calc(100% - 20px);
-                    background-color: #e9ecef;
-                }
-                .timeline-step.active:not(:last-child)::before {
-                    background-color: #28a745;
-                }
-                .timeline-step__icon-wrapper {
-                    width: 42px;
-                    height: 42px;
-                    border-radius: 50%;
-                    background-color: #e9ecef;
-                    color: #adb5bd;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 1.2rem;
-                    margin-right: 20px;
-                    flex-shrink: 0;
-                    z-index: 1;
-                    transition: all 0.3s ease;
-                }
-                .timeline-step.active .timeline-step__icon-wrapper {
-                    background-color: #28a745;
-                    color: white;
-                }
-                .timeline-step__content {
-                    padding-top: 8px;
-                }
-                .timeline-step__label {
-                    font-size: 1rem;
-                    font-weight: 500;
-                    margin-bottom: 4px;
-                    color: #6c757d;
-                }
-                .timeline-step.active .timeline-step__label {
-                    font-weight: bold;
-                    color: #212529;
-                }
-                .timeline-step__timestamp {
-                    font-size: 0.85rem;
-                    color: #6c757d;
-                    margin-bottom: 0;
-                }
-            `}</style>
         </div>
     );
 };
@@ -131,7 +62,7 @@ function OrderTrackingPage() {
     const { orderId } = useParams();
     const [order, setOrder] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-
+    const [isCancelling, setIsCancelling] = useState(false);
     useEffect(() => {
         if (!orderId) {
             toast.error("ID đơn hàng không hợp lệ.");
@@ -151,7 +82,26 @@ function OrderTrackingPage() {
         };
         fetchOrderDetails();
     }, [orderId]);
+    // cancel order
+    const handleCancelOrder = async () => {
+        const confirmCancel = window.confirm(
+            'Bạn có chắc muốn hủy đơn hàng này không !'
+        );
+        if (confirmCancel) {
+            setIsCancelling(true);
+            try {
+                const res = await cancelMyOder(orderId);
+                setOrder(res.data.order);
+                toast.success('Đã hủy đơn hàng thành công !');
+            } catch (error) {
+                toast.error(error.response?.data?.message || 'Hủy đơn hàng thất bại !');
 
+            }
+            finally {
+                setIsCancelling(false);
+            }
+        }
+    }
     if (isLoading) {
         return <div className="d-flex justify-content-center align-items-center vh-100">Đang tải thông tin đơn hàng...</div>;
     }
@@ -182,7 +132,6 @@ function OrderTrackingPage() {
                 </nav>
 
                 <div className="row">
-                    {/* Cột chính hiển thị thông tin */}
                     <div className="col-lg-8">
                         <div className="card shadow-sm">
                             <div className="card-header bg-white p-4">
@@ -191,12 +140,22 @@ function OrderTrackingPage() {
                             </div>
                             <div className="card-body p-4">
                                 <h4 className="mb-4">Hành trình đơn hàng</h4>
+                                {order.status === 'pending' && (
+                                    <div className="mb-4 text-end">
+                                        <button
+                                            onClick={handleCancelOrder}
+                                            className="btn btn-danger"
+                                            disabled={isCancelling} // Vô hiệu hóa nút khi đang xử lý
+                                        >
+                                            {isCancelling ? 'Đang xử lý...' : 'Hủy đơn hàng'}
+                                        </button>
+                                    </div>
+                                )}
                                 <OrderTimeline statusHistory={order.statusHistory} currentStatus={order.status} />
                             </div>
                         </div>
                     </div>
 
-                    {/* Cột phụ hiển thị tóm tắt */}
                     <div className="col-lg-4">
                         <div className="card shadow-sm mb-4">
                             <div className="card-body">

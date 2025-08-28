@@ -99,13 +99,28 @@ const AddProductModal = ({ isOpen, onClose, onSave }) => {
             <div className="modal-content" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
                 <h3>Thêm sản phẩm mới</h3>
                 <form onSubmit={handleSubmit}>
-                    <div><label>Tên sản phẩm:</label><input type="text" value={name} onChange={(e) => setName(e.target.value)} required /></div>
-                    <div><label>Thương hiệu:</label><input type="text" placeholder="VD: Nike, Adidas..." value={brand} onChange={(e) => setBrand(e.target.value)} required /></div>
-                    <div><label>Mô tả:</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} required /></div>
-                    <div><label>Giá:</label><input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required /></div>
-                    <div><label>Tổng số lượng nhập kho:</label><input type="number" value={stock} onChange={(e) => setStock(e.target.value)} required /></div>
+                    <div>
+                        <label>Tên sản phẩm:</label>
+                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+                    </div>
+                    <div>
+                        <label>Thương hiệu:</label>
+                        <input type="text" placeholder="VD: Nike, Adidas..." value={brand} onChange={(e) => setBrand(e.target.value.toUpperCase())} required />
+                    </div>
+                    <div>
+                        <label>Mô tả:</label>
+                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
 
-                    {/* Input để chọn file, cho phép chọn nhiều file */}
+                    </div>
+                    <div>
+                        <label>Giá:</label>
+                        <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} required />
+                    </div>
+                    <div>
+                        <label>Tổng số lượng nhập kho:</label>
+                        <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} required />
+                    </div>
+
                     <div>
                         <label>Ảnh sản phẩm (chọn nhiều ảnh):</label>
                         <input

@@ -1,4 +1,4 @@
-// --- THAY THẾ TOÀN BỘ FILE: frontend/src/pages/PayPage.js ---
+// --- THAY THẾ TOÀN BỘ FILE: src/pages/PayPage.js ---
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -8,7 +8,8 @@ import MobileMenu from '../components/common/MobileMenu';
 import GoToTop from '../components/common/GoToTop';
 import { toast } from 'react-toastify';
 import { createOrder, getUserInfo } from '../container/services/userService';
-import { createVnpayPaymentUrl } from '../container/services/payService';
+// --- ĐÃ CẬP NHẬT ---: Import hàm createMomoAioPaymentUrl
+import { createVnpayPaymentUrl, createMomoAioPaymentUrl } from '../container/services/payService';
 
 function PayPage() {
     const navigate = useNavigate();
@@ -18,7 +19,6 @@ function PayPage() {
     const [errors, setErrors] = useState({});
     const [orderSummary, setOrderSummary] = useState({ items: [], cartTotal: 0, shippingFee: 0, total: 0 });
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-    const [showMobileSummary, setShowMobileSummary] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -50,7 +50,7 @@ function PayPage() {
                     setFormData(prev => ({
                         ...prev,
                         fullName: profileRes.data.user.name || '',
-                        email: profileRes.data.user.email || '', // Lấy email từ profile
+                        email: profileRes.data.user.email || '',
                         phoneNumber: profileRes.data.user.phoneNumber || '',
                         address: profileRes.data.user.address || ''
                     }));
@@ -68,27 +68,18 @@ function PayPage() {
 
     const validateForm = () => {
         const newErrors = {};
-        if (!formData.fullName.trim()) {
-            newErrors.fullName = "Vui lòng nhập họ và tên.";
-        }
-
-        // --- BỔ SUNG VALIDATION CHO EMAIL ---
+        if (!formData.fullName.trim()) newErrors.fullName = "Vui lòng nhập họ và tên.";
         if (!formData.email.trim()) {
             newErrors.email = "Vui lòng nhập email.";
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
             newErrors.email = "Địa chỉ email không hợp lệ.";
         }
-        // ------------------------------------
-
         if (!formData.phoneNumber.trim()) {
             newErrors.phoneNumber = "Vui lòng nhập số điện thoại.";
         } else if (!/^(0\d{9})$/.test(formData.phoneNumber.trim())) {
             newErrors.phoneNumber = "Số điện thoại không hợp lệ.";
         }
-        if (!formData.address.trim()) {
-            newErrors.address = "Vui lòng nhập địa chỉ giao hàng.";
-        }
-
+        if (!formData.address.trim()) newErrors.address = "Vui lòng nhập địa chỉ giao hàng.";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -96,7 +87,7 @@ function PayPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm() || isPlacingOrder) {
-            if (Object.keys(errors).length > 0) {
+            if (Object.keys(errors).length > 0 || !validateForm()) {
                 toast.warn("Vui lòng kiểm tra lại các thông tin bắt buộc.");
             }
             return;
@@ -104,13 +95,7 @@ function PayPage() {
         setIsPlacingOrder(true);
 
         const orderData = {
-            shippingInfo: {
-                fullName: formData.fullName,
-                address: formData.address,
-                city: formData.city,
-                phoneNumber: formData.phoneNumber,
-                email: formData.email, // Đảm bảo email được gửi đi
-            },
+            shippingInfo: { ...formData },
             items: orderSummary.items,
             paymentMethod: paymentMethod,
             notes: formData.notes
@@ -143,8 +128,29 @@ function PayPage() {
                     setIsPlacingOrder(false);
                 }
             } catch (error) {
-                const errorMessage = error.response?.data?.message || "Không thể kết nối đến máy chủ thanh toán.";
-                toast.error(errorMessage);
+                toast.error(error.response?.data?.message || "Không thể kết nối đến máy chủ thanh toán.");
+                setIsPlacingOrder(false);
+            }
+        }
+        // --- ĐÃ CẬP NHẬT ---: Thêm nhánh xử lý cho MoMo AIO
+        else if (paymentMethod === 'MOMO_AIO') {
+            const paymentData = {
+                amount: orderSummary.total,
+                orderInfo: `P&T Shop - Thanh toan don hang`,
+            };
+            try {
+                // Gọi đến hàm service cho MoMo AIO
+                const response = await createMomoAioPaymentUrl(paymentData);
+                const data = response.data;
+                if (data && data.payUrl) {
+                    sessionStorage.removeItem('checkout_items');
+                    window.location.href = data.payUrl;
+                } else {
+                    toast.error(data.message || "Lỗi: Không thể tạo yêu cầu thanh toán MoMo.");
+                    setIsPlacingOrder(false);
+                }
+            } catch (error) {
+                toast.error(error.response?.data?.message || "Không thể kết nối đến máy chủ thanh toán.");
                 setIsPlacingOrder(false);
             }
         }
@@ -192,43 +198,27 @@ function PayPage() {
                                         <div className="main-content">
                                             <div className="main-title"><h2>Thông tin giao hàng</h2></div>
                                             <div className="fieldset">
-                                                <div className="fieldset-fullname form-group">
-                                                    <label htmlFor="fullName" className="form-label">Họ và tên</label>
-                                                    <input id="fullName" name="fullName" type="text" className="form-control" value={formData.fullName} onChange={handleChange} placeholder="Bắt buộc nhập" />
-                                                    {errors.fullName && <span className="form-message" style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{errors.fullName}</span>}
-                                                </div>
-
-                                                {/* --- Ô INPUT EMAIL ĐƯỢC THÊM VÀO ĐÂY --- */}
-                                                <div className="fieldset-email form-group">
-                                                    <label htmlFor="email" className="form-label">Email</label>
-                                                    <input id="email" name="email" type="email" className="form-control" value={formData.email} onChange={handleChange} placeholder="Để nhận xác nhận đơn hàng" />
-                                                    {errors.email && <span className="form-message" style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{errors.email}</span>}
-                                                </div>
-
-                                                <div className="fieldset-phone form-group">
-                                                    <label htmlFor="phoneNumber" className="form-label">Số điện thoại</label>
-                                                    <input id="phoneNumber" name="phoneNumber" type="tel" className="form-control" value={formData.phoneNumber} onChange={handleChange} placeholder="Bắt buộc nhập" />
-                                                    {errors.phoneNumber && <span className="form-message" style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{errors.phoneNumber}</span>}
-                                                </div>
-                                                <div className="fieldset-address form-group">
-                                                    <label htmlFor="address" className="form-label">Địa chỉ</label>
-                                                    <input id="address" name="address" type="text" className="form-control" value={formData.address} onChange={handleChange} placeholder="Bắt buộc nhập" />
-                                                    {errors.address && <span className="form-message" style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{errors.address}</span>}
-                                                </div>
-                                                <div className="fieldset-notes form-group">
-                                                    <label htmlFor="notes" className="form-label">Ghi chú (tùy chọn)</label>
-                                                    <textarea id="notes" name="notes" className="form-control" value={formData.notes} onChange={handleChange} placeholder="Ghi chú cho người bán..." />
-                                                </div>
+                                                {/* Các ô input thông tin giao hàng giữ nguyên */}
+                                                <div className="fieldset-fullname form-group"><label htmlFor="fullName" className="form-label">Họ và tên</label><input id="fullName" name="fullName" type="text" className="form-control" value={formData.fullName} onChange={handleChange} placeholder="Bắt buộc nhập" />{errors.fullName && <span className="form-message" style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{errors.fullName}</span>}</div>
+                                                <div className="fieldset-email form-group"><label htmlFor="email" className="form-label">Email</label><input id="email" name="email" type="email" className="form-control" value={formData.email} onChange={handleChange} placeholder="Để nhận xác nhận đơn hàng" />{errors.email && <span className="form-message" style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{errors.email}</span>}</div>
+                                                <div className="fieldset-phone form-group"><label htmlFor="phoneNumber" className="form-label">Số điện thoại</label><input id="phoneNumber" name="phoneNumber" type="tel" className="form-control" value={formData.phoneNumber} onChange={handleChange} placeholder="Bắt buộc nhập" />{errors.phoneNumber && <span className="form-message" style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{errors.phoneNumber}</span>}</div>
+                                                <div className="fieldset-address form-group"><label htmlFor="address" className="form-label">Địa chỉ</label><input id="address" name="address" type="text" className="form-control" value={formData.address} onChange={handleChange} placeholder="Bắt buộc nhập" />{errors.address && <span className="form-message" style={{ color: 'red', fontSize: '12px', marginTop: '5px' }}>{errors.address}</span>}</div>
+                                                <div className="fieldset-notes form-group"><label htmlFor="notes" className="form-label">Ghi chú (tùy chọn)</label><textarea id="notes" name="notes" className="form-control" value={formData.notes} onChange={handleChange} placeholder="Ghi chú cho người bán..." /></div>
                                             </div>
                                             <div className="main-title" style={{ marginTop: '2rem' }}><h2>Phương thức thanh toán</h2></div>
+                                            {/* --- ĐÃ CẬP NHẬT ---: Thêm lựa chọn MoMo AIO */}
                                             <div className="payment-methods" style={{ border: '1px solid #e1e1e1', padding: '1rem', borderRadius: '5px' }}>
                                                 <div className="payment-method-item" style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
                                                     <input type="radio" id="payment-cod" name="paymentMethod" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ marginRight: '10px', width: '18px', height: '18px' }} />
                                                     <label htmlFor="payment-cod" style={{ fontWeight: 500, cursor: 'pointer' }}>Thanh toán khi nhận hàng (COD)</label>
                                                 </div>
-                                                <div className="payment-method-item" style={{ display: 'flex', alignItems: 'center' }}>
+                                                <div className="payment-method-item" style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
                                                     <input type="radio" id="payment-vnpay" name="paymentMethod" value="VNPAY" checked={paymentMethod === 'VNPAY'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ marginRight: '10px', width: '18px', height: '18px' }} />
                                                     <label htmlFor="payment-vnpay" style={{ fontWeight: 500, cursor: 'pointer' }}>Thanh toán qua Cổng VNPay</label>
+                                                </div>
+                                                <div className="payment-method-item" style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <input type="radio" id="payment-momo-aio" name="paymentMethod" value="MOMO_AIO" checked={paymentMethod === 'MOMO_AIO'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ marginRight: '10px', width: '18px', height: '18px' }} />
+                                                    <label htmlFor="payment-momo-aio" style={{ fontWeight: 500, cursor: 'pointer' }}>Thanh toán MoMo (Thẻ/QR/Ví)</label>
                                                 </div>
                                             </div>
                                         </div>

@@ -71,7 +71,7 @@ export const path = {
     TEMPLATE_DISCOUNT: '/system/template-discount',
     TEMPLATE_FORMS: '/system/template-forms',
     TEMPLATE_NEWS: '/system/template-news',
-    TEMPLATE_GRID: '/system/template-grid',
+    TEMPLATE_CONTACT: '/system/template-contact',
     TEMPLATE_MAPS: '/system/template-maps',
     TEMPLATE_EXTRA: '/system/template-extra',
 };

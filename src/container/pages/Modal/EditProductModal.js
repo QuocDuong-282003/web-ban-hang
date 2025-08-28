@@ -1,9 +1,8 @@
-// --- THAY THẾ TOÀN BỘ FILE: src/components/Modal/EditProductModal.js ---
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getAllCategories } from '../../services/userService';
-import './EditProductModal.scss'; // Giữ lại file scss của bạn
+import './EditProductModal.scss';
 
 const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts = [] }) => {
 
@@ -63,8 +62,10 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
     if (!isOpen || !product) return null;
 
     const handleChange = (e) => {
+
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const finalValue = name === 'brand' ? value.toUpperCase() : value;
+        setFormData((prev) => ({ ...prev, [name]: finalValue }));
     };
 
     const handleFileChange = (e) => {
@@ -108,8 +109,6 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
 
         const updateFormData = new FormData();
 
-        // === PHẦN SỬA LỖI QUAN TRỌNG NHẤT ===
-        // Phải append từng trường của object `formData` một cách riêng lẻ.
         updateFormData.append('name', formData.name);
         updateFormData.append('description', formData.description);
         updateFormData.append('price', formData.price);
@@ -117,13 +116,10 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
         updateFormData.append('sold', formData.sold);
         updateFormData.append('category', formData.category);
         updateFormData.append('brand', formData.brand);
-        // ======================================
 
         const filledOptions = options.filter(opt => opt.trim() !== '');
         updateFormData.append('options', JSON.stringify(filledOptions));
 
-        // Thêm các file ảnh mới vào FormData.
-        // Tên 'images' phải trùng với middleware multer.
         if (newImageFiles.length > 0) {
             for (const file of newImageFiles) {
                 updateFormData.append('images', file);
@@ -134,7 +130,6 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
             await onSave(updateFormData);
         } catch (err) {
             console.error("Lỗi khi gửi form từ EditProductModal:", err);
-            // Lỗi đã được xử lý và toast ở component cha.
         }
     };
 
@@ -143,14 +138,32 @@ const EditProductModal = ({ isOpen, onClose, onSave, product, existingProducts =
             <div className="edit-product-modal__content">
                 <h3 className="edit-product-modal__title">Chỉnh sửa sản phẩm</h3>
                 <form onSubmit={handleSubmit} className="edit-product-modal__form">
-                    {/* Các input fields của bạn giữ nguyên, chúng đã đúng */}
-                    <div className="edit-product-modal__form-group"><label>Tên sản phẩm:</label><input name="name" type="text" value={formData.name} onChange={handleChange} required /></div>
-                    <div className="edit-product-modal__form-group"><label>Thương hiệu:</label><input name="brand" type="text" value={formData.brand} onChange={handleChange} required /></div>
-                    <div className="edit-product-modal__form-group"><label>Mô tả:</label><textarea name="description" value={formData.description} onChange={handleChange} required /></div>
-                    <div className="edit-product-modal__form-group"><label>Giá:</label><input name="price" type="number" value={formData.price} onChange={handleChange} required /></div>
-                    <div className="edit-product-modal__form-group"><label>Tồn kho:</label><input name="stock" type="number" value={formData.stock} onChange={handleChange} required /></div>
-                    <div className="edit-product-modal__form-group"><label>Đã bán:</label><input name="sold" type="number" value={formData.sold} onChange={handleChange} required /></div>
-                    <div className="edit-product-modal__form-group"><label>Danh mục:</label>
+                    <div className="edit-product-modal__form-group">
+                        <label>Tên sản phẩm:</label>
+                        <input name="name" type="text" value={formData.name} onChange={handleChange} required />
+                    </div>
+                    <div className="edit-product-modal__form-group">
+                        <label>Thương hiệu:</label>
+                        <input name="brand" type="text" value={formData.brand} onChange={handleChange} required />
+                    </div>
+                    <div className="edit-product-modal__form-group">
+                        <label>Mô tả:</label>
+                        <textarea name="description" value={formData.description} onChange={handleChange} required />
+                    </div>
+                    <div className="edit-product-modal__form-group">
+                        <label>Giá:</label>
+                        <input name="price" type="number" value={formData.price} onChange={handleChange} required />
+                    </div>
+                    <div className="edit-product-modal__form-group">
+                        <label>Tồn kho:</label>
+                        <input name="stock" type="number" value={formData.stock} onChange={handleChange} required />
+                    </div>
+                    <div className="edit-product-modal__form-group">
+                        <label>Đã bán:</label>
+                        <input name="sold" type="number" value={formData.sold} onChange={handleChange} required />
+                    </div>
+                    <div className="edit-product-modal__form-group">
+                        <label>Danh mục:</label>
                         <select name="category" value={formData.category} onChange={handleChange} required>
                             <option value="" disabled>-- Chọn danh mục --</option>
                             {categories.map((cat) => (<option key={cat._id} value={cat._id}>{cat.name}</option>))}

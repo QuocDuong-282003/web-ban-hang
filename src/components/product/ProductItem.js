@@ -91,8 +91,8 @@ function ProductItem({ product }) {
                         <img className="card-img-top" src={product.imageBase64 || product.images?.[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                 </div>
-                <div className="card-body d-flex flex-column p-3">
-                    <h5 className="card-title product-name flex-grow-1" style={{ minHeight: '42px', fontSize: '1rem' }}>
+                <div className="card-body d-flex flex-column p-1">
+                    <h5 className="card-title product-name flex-grow-1" style={{ minHeight: '30px', fontSize: '1rem' }}>
                         {product.name}
                     </h5>
                     <div className="mt-auto">

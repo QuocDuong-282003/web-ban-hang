@@ -1,0 +1,23 @@
+/* --- CSS CHO PAGINATION --- */
+
+/* Tô màu xanh cho nút của trang đang active */
+.pagination .page-item.active .page-link {
+    z-index: 1;
+    color: #fff;
+    background-color: #007bff; /* Bạn có thể đổi màu xanh này */
+    border-color: #007bff;   /* Bạn có thể đổi màu viền này */
+}
+
+/* Làm mờ và vô hiệu hóa click cho các nút disabled (Trang trước/sau khi ở đầu/cuối) */
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: auto;
+    background-color: #fff;
+    border-color: #dee2e6;
+}
+
+/* Style chung cho các nút (tùy chọn) */
+.pagination .page-link {
+    cursor: pointer;
+}

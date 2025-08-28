@@ -1,0 +1,70 @@
+// frontend/src/pages/OrderTrackingPage.scss
+
+.order-timeline {
+    display: flex;
+    flex-direction: column;
+}
+
+.timeline-step {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding-bottom: 30px;
+
+    &:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 35px;
+        width: 2px;
+        height: calc(100% - 20px);
+        background-color: #e9ecef;
+    }
+
+    &.active:not(:last-child)::before {
+        background-color: #28a745;
+    }
+
+    &__icon-wrapper {
+        width: 42px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #adb5bd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 20px;
+        flex-shrink: 0;
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+
+    &.active .timeline-step__icon-wrapper {
+        background-color: #28a745;
+        color: white;
+    }
+
+    &__content {
+        padding-top: 8px;
+    }
+
+    &__label {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 4px;
+        color: #6c757d;
+    }
+
+    &.active .timeline-step__label {
+        font-weight: bold;
+        color: #212529;
+    }
+
+    &__timestamp {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+}

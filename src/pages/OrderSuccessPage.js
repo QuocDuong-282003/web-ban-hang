@@ -1,4 +1,3 @@
-// --- THAY THẾ TOÀN BỘ FILE: frontend/src/pages/OrderSuccessPage.js ---
 
 import React from 'react';
 // Import thêm useLocation để lấy thông tin từ URL

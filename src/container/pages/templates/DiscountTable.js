@@ -28,7 +28,6 @@ const discountFilterFn = (discount, searchTerm) => {
 };
 
 const DiscountTable = () => {
-    // ===  STATE VÀ HOOKS ===
     const [allDiscounts, setAllDiscounts] = useState([]); // Lưu trữ toàn bộ dữ liệu gốc
     const [isLoading, setIsLoading] = useState(false);
 

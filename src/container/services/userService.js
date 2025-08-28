@@ -10,23 +10,34 @@ const API = axios.create({
 });
 API.interceptors.request.use(
     (config) => {
-        // Lấy token từ localStorage. Key 'token' phải khớp với key trong userAuthSlice.
         const token = localStorage.getItem('token');
 
-        // Nếu có token, thêm nó vào header 'Authorization'
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
-
-        // Trả về config đã được sửa đổi để request tiếp tục được gửi đi
         return config;
     },
     (error) => {
-        // Xử lý lỗi nếu có trong quá trình cấu hình request
         return Promise.reject(error);
     }
 );
-
+// check toekn and logout when token end date
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            localStorage.removeItem('token');
+            // Kiểm tra đường dẫn hiện tại
+            const path = window.location.pathname;
+            if (path.startsWith('/system')) {
+                window.location.href = '/system/login';
+            } else {
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 //  Login: POST /api/login /client
 export const handleLoginApi = (email, password) => {
@@ -43,9 +54,24 @@ export const updatePasswordUser = (email, newPassword) => {
     return API.post('/reset-password', { email, newPassword });
 };
 //
-export const handleRegisterApi = (email, password, name, role = 'user') => {
-    return API.post('/register', { email, password, name, role });
+// export const handleRegisterApi = (email, password, name, role = 'user') => {
+//     return API.post('/register', { email, password, name, role });
+// };
+export const handleRegisterApi = (formData) => {
+    return API.post('/register', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        }
+    });
 };
+// image
+export const uploadAvatar = (formData) => {
+    return API.post('/upload-avatar', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        }
+    })
+}
 export const getUserInfo = () => API.get('/profile');
 
 //user
@@ -80,8 +106,6 @@ export const getAllProduct = () => {
     return API.get('/product-all');
 }
 
-// update product
-// TẠI FILE: userService.js
 
 // update product
 export const handleUpdateProduct = (productId, formData) => {
@@ -167,7 +191,6 @@ const getAuthHeaders = () => {
 export const getAdminAllReviews = (params) => {
 
     return API.get('/admin/reviews', {
-        headers: getAuthHeaders(),
         params: params
     });
 };
@@ -219,7 +242,9 @@ export const getFilterOptions = () => {
 export const getProductByIds = (ids) => {
     return API.post('/products/by-id', { ids });
 }
-
+export const cancelMyOder = (orderId) => {
+    return API.put(`/orders/${orderId}/cancel-by-user`);
+}
 //search
 export const getProductSuggestions = async (query) => {
     return API.get('/products/suggestions', { params: { q: query } });
@@ -239,4 +264,18 @@ export const updateCart = async (cartItemId, data) => {
 }
 export const deleteCart = async (cartItemId) => {
     return API.delete(`/delete-cart/${cartItemId}`)
+}
+// contact
+export const getAllContact = (params) => {
+    return API.get('/contact-all', { params })
+}
+export const deleteContact = async (id) => {
+    return API.delete(`/delete-contact/${id}`);
+}
+export const createContact = async (contactData) => {
+    return API.post('/contact', contactData);
+}
+export const updateStatus = async (contactId, status) => {
+    const requestBody = { status: status };
+    return API.put(`/update-status/${contactId}/status`, requestBody);
 }

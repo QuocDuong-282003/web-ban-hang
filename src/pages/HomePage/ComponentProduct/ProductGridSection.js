@@ -59,7 +59,7 @@ function ProductGridSection({ title, products, openQuickView }) {
                                 </div>
 
                                 <div className="card-body d-flex flex-column">
-                                    <h5 className="card-title description flex-grow-1" style={{ minHeight: '42px' }}>
+                                    <h5 className="card-title description flex-grow-1" >
                                         {product.name}
                                     </h5>
 

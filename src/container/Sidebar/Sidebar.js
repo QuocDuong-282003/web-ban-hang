@@ -1,58 +1,4 @@
-// //  Sidebar tổng hợp các mục
-// import React from 'react';
-// import { Drawer, List, Typography, Divider } from '@mui/material';
-// // import SidebarItem from '../redux/sidebarSlice'; // Đây là lỗi, sidebarSlice không phải component
-// import SidebarItem from './SidebarItem'; // Sửa: Giả sử SidebarItem.js cùng cấp hoặc trong thư mục con hợp lý
-// import { path } from '../../components/utils/constant'; // Đường dẫn đến constant.js
 
-// import {
-//     AccountCircle, Dashboard as DashboardIcon, ShoppingCart, Person, InsertDriveFile, // Đổi tên Dashboard thành DashboardIcon để tránh xung đột
-//     ViewModule, TableChart, Widgets, Description,
-//     BarChart, ViewComfy, Map, Star
-// } from '@mui/icons-material';
-
-// const drawerWidth = 260;
-
-// const Sidebar = () => {
-//     return (
-//         <Drawer
-//             variant="permanent"
-//             sx={{
-//                 width: drawerWidth,
-//                 flexShrink: 0,
-//                 [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-//             }}
-//         >
-//             <List>
-//                 {/* Sử dụng hằng số path cho prop 'to' */}
-//                 <SidebarItem label="Profile" icon={<AccountCircle />} to={path.ADMIN_PROFILE} />
-//                 <SidebarItem label="Dashboard" icon={<DashboardIcon />} chipLabel="Admin" to={path.DASHBOARD} />
-//                 <SidebarItem label="E-commerce" icon={<ShoppingCart />} to={path.ADMIN_ECOMMERCE_OVERVIEW} />
-//                 <SidebarItem label="User" icon={<Person />} chipLabel="New" to={path.ADMIN_USER_OVERVIEW} />
-//                 {/* <SidebarItem label="Documentation" icon={<InsertDriveFile />} to="/some-documentation-path" />  */}
-//                 {/* Ví dụ: bạn cần thêm path cho Documentation nếu muốn nó điều hướng */}
-//             </List>
-//             <Divider />
-//             <Typography variant="caption" sx={{ pl: 2, pt: 1 }}>
-//                 TEMPLATE
-//             </Typography>
-//             <List>
-//                 {/* Các mục template này cũng cần prop 'to' nếu chúng là các trang có thể điều hướng */}
-//                 <SidebarItem label="Core" icon={<ViewModule />} to={path.TEMPLATE_CORE} />
-//                 <SidebarItem label="Tables" icon={<TableChart />} to={path.TEMPLATE_TABLES} />
-//                 <SidebarItem label="UI Elements" icon={<Widgets />} to={path.TEMPLATE_UI_ELEMENTS} />
-//                 <SidebarItem label="Forms" icon={<Description />} to={path.TEMPLATE_FORMS} />
-//                 <SidebarItem label="Charts" icon={<BarChart />} to={path.TEMPLATE_CHARTS} />
-//                 <SidebarItem label="Grid" icon={<ViewComfy />} to={path.TEMPLATE_GRID} />
-//                 <SidebarItem label="Maps" icon={<Map />} to={path.TEMPLATE_MAPS} />
-//                 <SidebarItem label="Extra" icon={<Star />} to={path.TEMPLATE_EXTRA} />
-//             </List>
-//         </Drawer>
-//     );
-// };
-
-// export default Sidebar;
-// Sidebar.js
 import React from 'react';
 import {
     Drawer,
@@ -126,7 +72,6 @@ const Sidebar = ({ isOpen }) => { // Receive isOpen as a prop
                 },
             }}
         >
-            {/* Toolbar spacer if using a fixed AppBar */}
             <Toolbar />
 
             <Box
@@ -156,20 +101,18 @@ const Sidebar = ({ isOpen }) => { // Receive isOpen as a prop
                     <SidebarItem label="Dashboard" icon={<DashboardIcon />} chipLabel="Admin" to={path.DASHBOARD} />
                     <SidebarItem label="Order-Table" icon={<ShoppingCart />} to={path.ADMIN_ORDER_TABLE_OVERVIEW} />
                     <SidebarItem label="User" icon={<Person />} chipLabel="New" to={path.ADMIN_USER_OVERVIEW} />
-                    {/* <SidebarItem label="Documentation" icon={<InsertDriveFile />} to="/some-documentation-path" />  */}
-                    {/* Ví dụ: bạn cần thêm path cho Documentation nếu muốn nó điều hướng */}
+
                 </List>
                 <Divider />
 
-                {/* Conditionally render "TEMPLATE" text only when sidebar is open */}
                 {isOpen && (
                     <Typography
                         variant="caption"
                         sx={{
-                            pl: 2.5, // Adjust padding to align with icons/text
+                            pl: 2.5,
                             pt: 1,
                             pb: 1,
-                            display: 'block', // Ensure it takes block space
+                            display: 'block',
                             color: 'text.secondary',
                             fontWeight: 'medium',
                         }}
@@ -177,7 +120,6 @@ const Sidebar = ({ isOpen }) => { // Receive isOpen as a prop
                         TEMPLATE
                     </Typography>
                 )}
-                {/* Add a smaller visual break if not open */}
                 {!isOpen && <Box sx={{ height: '20px' }} />}
 
 
@@ -192,13 +134,12 @@ const Sidebar = ({ isOpen }) => { // Receive isOpen as a prop
                     {renderSidebarItem('Extra', <Star />, path.TEMPLATE_EXTRA)}
                 </List> */}
                 <List>
-                    {/* Các mục template này cũng cần prop 'to' nếu chúng là các trang có thể điều hướng */}
                     <SidebarItem label="ListCategory" icon={<ViewModule />} to={path.TEMPLATE_CATEGORY} />
                     <SidebarItem label="ProductTables" icon={<TableChart />} to={path.TEMPLATE_TABLES} />
                     <SidebarItem label="DiscountTables" icon={<Widgets />} to={path.TEMPLATE_DISCOUNT} />
                     <SidebarItem label="Reviews" icon={<Description />} to={path.TEMPLATE_FORMS} />
                     <SidebarItem label="News" icon={<BarChart />} to={path.TEMPLATE_NEWS} />
-                    <SidebarItem label="Grid" icon={<ViewComfy />} to={path.TEMPLATE_GRID} />
+                    <SidebarItem label="Contact" icon={<ViewComfy />} to={path.TEMPLATE_CONTACT} />
                     <SidebarItem label="Maps" icon={<Map />} to={path.TEMPLATE_MAPS} />
                     <SidebarItem label="Extra" icon={<Star />} to={path.TEMPLATE_EXTRA} />
                 </List>

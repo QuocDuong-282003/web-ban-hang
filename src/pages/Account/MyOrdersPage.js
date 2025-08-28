@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getMyOrders } from '../../container/services/userService';
+import { getMyOrders, addToCart } from '../../container/services/userService';
 import { toast } from 'react-toastify';
 
 // Component con để hiển thị một đơn hàng trong danh sách
@@ -17,31 +17,96 @@ const OrderRow = ({ order }) => {
     };
     const statusInfo = statusLabels[order.status] || statusLabels.default;
 
+    // handle mua lại
+
+    const handleBuyAgain = async (event) => {
+        event.stopPropagation();
+
+        const validItems = order.items.filter(item => item.product);
+
+        if (validItems.length === 0) {
+            toast.error("Các sản phẩm trong đơn hàng này không còn tồn tại.");
+            return;
+        }
+
+        if (validItems.length < order.items.length) {
+            toast.info("Một vài sản phẩm không còn tồn tại và sẽ được bỏ qua.");
+        }
+
+        const loadingToast = toast.loading('Đang thêm sản phẩm vào giỏ hàng...');
+        try {
+            await Promise.all(
+                validItems.map(item =>
+
+                    addToCart({
+                        productId: item.product._id,
+                        quantity: item.quantity,
+                        productVariantId: item.variant
+                    })
+                )
+            );
+            toast.update(loadingToast, { render: 'Đã thêm vào giỏ!', type: 'success', isLoading: false, autoClose: 2000 });
+            navigate('/cart');
+        } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Mua lại thất bại!';
+            toast.update(loadingToast, { render: errorMessage, type: 'error', isLoading: false, autoClose: 3000 });
+            console.error("Lỗi khi mua lại!", errorMessage);
+        }
+    };
     return (
         <div className="card mb-3 shadow-sm">
             <div className="card-header d-flex justify-content-between align-items-center bg-light flex-wrap">
                 <div>
                     <strong className="mr-3">Mã đơn hàng: #{order.orderCode}</strong>
-                    <small className="text-muted">Ngày đặt: {new Date(order.createdAt).toLocaleDateString('vi-VN')}</small>
+                    <small className="text-muted d-block d-md-inline mt-1 mt-md-0 ml-md-3">Ngày đặt: {new Date(order.createdAt).toLocaleDateString('vi-VN')}</small>
                 </div>
                 <span className={`badge badge-pill badge-${statusInfo.class} p-2 mt-2 mt-md-0`}>{statusInfo.text}</span>
             </div>
+
             <div className="card-body py-2 px-3">
-                {order.items.slice(0, 2).map(item => ( // Chỉ hiển thị tối đa 2 sản phẩm đầu
-                    <div key={item._id} className="d-flex align-items-center mb-2">
-                        <img src={item.image} alt={item.name} style={{ width: '50px', height: '50px', objectFit: 'cover', marginRight: '10px' }} className="rounded" />
-                        <div className="flex-grow-1">
-                            <p className="mb-0 small">{item.name}</p>
-                            <small className="text-muted">Số lượng: {item.quantity}</small>
+
+                {order.items.map(item => (
+                    <div key={item._id} className="d-flex justify-content-between align-items-center border-bottom py-2">
+
+                        <div className="d-flex align-items-center">
+                            <img src={item.image} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', marginRight: '15px' }} className="rounded" />
+                            <div>
+                                <p className="mb-0 small font-weight-bold">{item.name}</p>
+                                <small className="text-muted">Số lượng: {item.quantity}</small>
+                            </div>
                         </div>
+
+                        {order.status === 'delivered' && (
+                            <div>
+                                <button
+                                    onClick={() => navigate(`/product-detail/${item.product.slug || item.product._id}`)}
+                                    className="btn btn-danger btn-sm"
+                                >
+                                    Đánh giá
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ))}
-                {order.items.length > 2 && <small className="text-muted">và {order.items.length - 2} sản phẩm khác...</small>}
+
             </div>
-            <div className="card-footer d-flex justify-content-between align-items-center">
-                <span>Tổng tiền: <strong className="text-danger">{order.totalPrice.toLocaleString('vi-VN')} ₫</strong></span>
-                {/* Nút này sẽ điều hướng đến trang theo dõi chi tiết */}
-                <button onClick={() => navigate(`/order-tracking/${order._id}`)} className="btn btn-primary btn-sm">Xem chi tiết</button>
+
+            <div className="card-footer d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <span>Tổng tiền: <strong className="text-danger">{order.totalPrice.toLocaleString('vi-VN')} ₫</strong></span>
+                </div>
+
+                <div className="mt-2 mt-md-0">
+                    {(order.status === 'delivered' || order.status === 'cancelled') && (
+                        <button onClick={handleBuyAgain} className="btn btn-warning btn-sm mr-2">
+                            Mua lại
+                        </button>
+                    )}
+
+                    <button onClick={() => navigate(`/order-tracking/${order._id}`)} className="btn btn-primary btn-sm">
+                        Xem chi tiết đơn hàng
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -73,7 +138,7 @@ function MyOrdersPage() {
     }
 
     return (
-        // Component này giờ chỉ trả về phần nội dung, không có Header, Footer
+        // trả về phần nội dung, không có Header, Footer
         <div>
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="mb-0">Đơn hàng của tôi</h2>
