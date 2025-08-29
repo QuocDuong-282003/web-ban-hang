@@ -11,9 +11,10 @@ const ReviewItem = ({ review }) => {
     };
 
     //
-    const userImage = (review.user?.images && review.user.images.length > 0)
-        ? `data:${review.user.images[0].contentType};base64,${review.user.images[0].data.toString('base64')}`
+    const userImage = review.user?.avatar
+        ? review.user.avatar
         : '/assets/img/product/noavatar.png';
+
 
     return (
         <div className="review-item">

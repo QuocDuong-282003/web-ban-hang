@@ -266,7 +266,7 @@ function HomePage() {
                         </div>
 
 
-                        {/* Policy Section <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< THÊM Ở ĐÂY */}
+                        {/* Policy Section <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  */}
                         <PolicySection />
 
 
