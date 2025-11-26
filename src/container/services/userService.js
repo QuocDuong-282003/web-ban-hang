@@ -1,12 +1,12 @@
 import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-console.log('API is calling to:', API_URL);
 
 const API = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json',
-    }
+    },
+    withCredentials: true // Include cookies in requests (for HttpOnly cookies)
 });
 API.interceptors.request.use(
     (config) => {
@@ -26,13 +26,34 @@ API.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
-            // Kiểm tra đường dẫn hiện tại
+            // Chỉ redirect nếu:
+            // 1. Không phải là request từ /api/me (vì /api/me có thể fail khi user chưa login - đó là bình thường)
+            // 2. Không phải đang ở trang public (home, products, etc.)
+            const requestUrl = error.config?.url || '';
             const path = window.location.pathname;
-            if (path.startsWith('/system')) {
-                window.location.href = '/system/login';
-            } else {
-                window.location.href = '/login';
+
+            // Không redirect nếu:
+            // - Request là /api/me (AuthChecker sẽ xử lý)
+            // - Đang ở trang public (home, products, news, etc.)
+            // - Đang ở trang login/register (tránh loop)
+            const isPublicPath = path === '/' ||
+                path.startsWith('/products') ||
+                path.startsWith('/news') ||
+                path.startsWith('/contact') ||
+                path.startsWith('/intro') ||
+                path === '/login' ||
+                path === '/register';
+
+            const isMeEndpoint = requestUrl.includes('/me');
+
+            // Chỉ redirect nếu là protected route và không phải /api/me
+            if (!isMeEndpoint && !isPublicPath) {
+                localStorage.removeItem('token');
+                if (path.startsWith('/system')) {
+                    window.location.href = '/system/login';
+                } else {
+                    window.location.href = '/login';
+                }
             }
         }
         return Promise.reject(error);
@@ -42,6 +63,124 @@ API.interceptors.response.use(
 //  Login: POST /api/login /client
 export const handleLoginApi = (email, password) => {
     return API.post('/login', { email, password });
+};
+
+// OTP Services (Old - không có password)
+export const sendOTP = (email, type = 'register') => {
+    return API.post('/send-otp', { email, type });
+};
+
+export const loginWithOTP = (email, otpCode) => {
+    return API.post('/login-with-otp', { email, otpCode });
+};
+
+export const registerWithOTP = (name, email, otpCode) => {
+    return API.post('/register-with-otp', { name, email, otpCode });
+};
+
+// ============ EMAIL + PASSWORD + OTP REGISTRATION (NEW) ============
+/**
+ * Đăng ký với Email + Password + OTP
+ * POST /api/auth/register - Gửi OTP đăng ký
+ * 
+ * @param {string} email - Email của user
+ * @param {string} name - Tên của user
+ * @param {string} password - Mật khẩu (tối thiểu 6 ký tự)
+ * @returns {Promise} Response với message "OTP đã gửi vào email của bạn"
+ */
+export const registerWithEmail = async (email, name, password) => {
+    const response = await API.post('/auth/register', {
+        email,
+        name,
+        password
+    }, {
+        withCredentials: true // Include cookies in request
+    });
+    return response.data;
+};
+
+/**
+ * Verify OTP và tạo user mới với password
+ * POST /api/auth/verify-otp - Verify OTP và đăng ký
+ * 
+ * Lưu ý: 
+ * - API này chỉ nhận JSON (không gửi file avatar)
+ * - Avatar sẽ được upload sau khi đăng ký thành công trong phần "Cập nhật hồ sơ"
+ * - Content-Type: application/json (không phải multipart/form-data)
+ * 
+ * @param {string} email - Email của user
+ * @param {string} code - Mã OTP 6 số
+ * @param {string} name - Tên của user
+ * @param {string} password - Mật khẩu
+ * @returns {Promise} Response với user info và HttpOnly cookie được set
+ */
+export const verifyOTPAndRegister = async (email, code, name, password) => {
+    // Gửi JSON (không phải FormData) - không có avatar
+    const response = await API.post('/auth/verify-otp', {
+        email,
+        code,
+        name,
+        password
+    }, {
+        withCredentials: true, // Include cookies in request
+        headers: {
+            'Content-Type': 'application/json' // Đảm bảo gửi JSON
+        }
+    });
+    return response.data;
+};
+
+// Google Login - Old endpoint (kept for compatibility)
+export const loginWithGoogle = (googleData) => {
+    return API.post('/login-with-google', googleData);
+};
+
+// ============ GOOGLE OAUTH2 LOGIN (NEW) ============
+/**
+ * Google Login with ID Token (for @react-oauth/google)
+ * POST /api/auth/google - Send Google id_token to backend
+ * 
+ * @param {string} id_token - Google ID token from @react-oauth/google
+ * @returns {Promise} Response with user info and HttpOnly cookie set
+ */
+export const loginWithGoogleToken = async (id_token) => {
+    const response = await API.post('/auth/google', { id_token }, {
+        withCredentials: true // Include cookies in request
+    });
+    return response.data;
+};
+
+/**
+ * Get current authenticated user from HttpOnly cookie
+ * GET /api/me - Returns user info based on HttpOnly cookie
+ * 
+ * @returns {Promise} Response with user info
+ */
+export const getMe = async () => {
+    const response = await API.get('/me', {
+        withCredentials: true // Include cookies in request
+    });
+    return response.data;
+};
+
+/**
+ * Logout - Clear HttpOnly cookie
+ * POST /api/auth/logout - Clear cookie and logout
+ * 
+ * Endpoint này sẽ:
+ * 1. Clear cookie 'token' (HTTPOnly) trên server
+ * 2. Trả về success message
+ * 
+ * QUAN TRỌNG: Phải gọi API này trước khi clear Redux state
+ * để đảm bảo cookie được xóa hoàn toàn trên server
+ * 
+ * @returns {Promise} Response với { success: true, message: "Logout successful" }
+ */
+export const logout = async () => {
+    const response = await API.post('/auth/logout', {}, {
+        withCredentials: true // Include cookies in request để server có thể clear cookie
+    });
+    return response.data;
 };
 
 //  Check email tồn tại: POST /api/forgot-password

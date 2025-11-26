@@ -23,8 +23,6 @@ function LoginForm() {
 
             // Dispatch action lên Redux, slice sẽ tự động cập nhật state và localStorage
             dispatch(userLoginSuccess({ user, token }));
-            console.log("chekc login ", response.data)
-            console.log("chekc login ", response.token)
             toast.success(`Chào mừng ${user.name} đã quay trở lại!`);
             navigate('/');
         } catch (err) {

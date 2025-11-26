@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { userLogout } from '../../container/redux/userAuthSlice';
-import { getCartAPI } from '../../container/services/userService';
+import { getCartAPI, logout } from '../../container/services/userService';
 import { setCart, clearCart } from '../../components/store/actions/cartSlice';
 import { useClientSideSearch } from '../../container/hooks/useClientSideSearch';
 import Search from './Search/Search';
+import AuthModal from '../auth/AuthModal';
+import MobileMenu from './MobileMenu';
 import { toast } from 'react-toastify';
 import './Header.scss';
 function Header() {
+    const [showAuthModal, setShowAuthModal] = useState(false);
     // Lấy trạng thái đăng nhập (isAuthenticated) và thông tin user từ Redux
     const { isAuthenticated, user } = useSelector(state => state.userAuth);
     const dispatch = useDispatch();
@@ -19,6 +22,7 @@ function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
     const [searchQuery, setSearchQuery] = useState('');
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false); // State để control user dropdown menu
 
     useEffect(() => {
         // Tạo một biến để kiểm tra xem component còn tồn tại không
@@ -48,14 +52,46 @@ function Header() {
             isMounted = false;
         };
     }, [isAuthenticated, dispatch]);
-    // HÀM XỬ LÝ ĐĂNG XUẤT
-    const handleLogout = () => {
-
-        dispatch(userLogout());
-
-        toast.info("Bạn đã đăng xuất.");
-
-        navigate('/');
+    // ============ HÀM XỬ LÝ ĐĂNG XUẤT ============
+    /**
+     * Handle logout
+     * Flow:
+     * 1. Gọi API /api/auth/logout để clear HttpOnly cookie trên server
+     * 2. Clear Redux state (user, token, isAuthenticated)
+     * 3. Clear localStorage
+     * 4. Clear cart (nếu có)
+     * 5. Navigate về home
+     * 
+     * QUAN TRỌNG: Phải gọi API logout trước để clear cookie,
+     * nếu không khi reload, AuthChecker sẽ tự động login lại vì cookie vẫn còn
+     */
+    const handleLogout = async () => {
+        try {
+            // Step 1: Gọi API logout để clear HttpOnly cookie trên server
+            await logout();
+            
+            // Step 2: Clear Redux state và localStorage
+            dispatch(userLogout());
+            
+            // Step 3: Clear cart
+            dispatch(clearCart());
+            
+            // Step 4: Show success message
+            toast.info("Bạn đã đăng xuất.");
+            
+            // Step 5: Navigate về home
+            navigate('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+            
+            // Ngay cả khi API logout fail, vẫn clear state và localStorage
+            // để đảm bảo user được logout ở frontend
+            dispatch(userLogout());
+            dispatch(clearCart());
+            
+            toast.info("Bạn đã đăng xuất.");
+            navigate('/');
+        }
     };
     const handleSearchSubmit = (event) => {
         event.preventDefault();
@@ -79,7 +115,11 @@ function Header() {
                             {isAuthenticated && user ? (
                                 // GIAO DIỆN KHI  ĐĂNG NHẬP
                                 <ul className="nav nav__first right">
-                                    <li className="nav-item nav-item__first nav-item__first-user">
+                                    <li 
+                                        className="nav-item nav-item__first nav-item__first-user"
+                                        onMouseEnter={() => setIsUserMenuOpen(true)}
+                                        onMouseLeave={() => setIsUserMenuOpen(false)}
+                                    >
                                         <img
                                             src={user.avatar ? user.avatar : "/assets/img/product/noavatar.png"}
                                             alt=""
@@ -87,26 +127,42 @@ function Header() {
                                         />
                                         <span className="nav-item__first-name">{user.name}</span>
 
-                                        {/* ĐÂY LÀ MENU DROPDOWN */}
-                                        <ul className="nav-item__first-menu">
+                                        {/* ĐÂY LÀ MENU DROPDOWN - Modern Design */}
+                                        <ul className={`nav-item__first-menu ${isUserMenuOpen ? 'nav-item__first-menu--open' : ''}`}>
                                             <li className="nav-item__first-item">
-                                                <Link to="/account">Tài khoản của tôi</Link>
+                                                <Link 
+                                                    to="/account" 
+                                                    className="nav-item__first-link"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                >
+                                                    <i className="fas fa-user-circle"></i>
+                                                    <span>Tài khoản của tôi</span>
+                                                </Link>
                                             </li>
                                             <li className="nav-item__first-item">
-                                                <Link to="/account?tab=order">Đơn mua</Link>
+                                                <Link 
+                                                    to="/account?tab=order" 
+                                                    className="nav-item__first-link nav-item__first-link--order"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                >
+                                                    <i className="fas fa-shopping-bag"></i>
+                                                    <span>Đơn mua</span>
+                                                </Link>
                                             </li>
-
+                                            <li className="nav-item__first-item nav-item__first-item--separator"></li>
                                             {/* ===  NÚT ĐĂNG XUẤT === */}
                                             <li className="nav-item__first-item">
                                                 <button
-                                                    onClick={handleLogout}
-                                                    className="btn-logout"
-                                                    style={{ all: 'unset', cursor: 'pointer', width: '100%', padding: '5px 15px', textAlign: 'left', background: 'none', border: 'none', color: 'white' }}
+                                                    onClick={() => {
+                                                        setIsUserMenuOpen(false);
+                                                        handleLogout();
+                                                    }}
+                                                    className="nav-item__first-link nav-item__first-link--logout"
                                                 >
-                                                    Đăng xuất
+                                                    <i className="fas fa-sign-out-alt"></i>
+                                                    <span>Đăng xuất</span>
                                                 </button>
                                             </li>
-
                                         </ul>
                                     </li>
                                 </ul>
@@ -114,7 +170,12 @@ function Header() {
                                 // GIAO DIỆN KHI CHƯA ĐĂNG NHẬP 
                                 <ul className="header_link right m-auto">
                                     <li>
-                                        <Link to="/login"><i className="fas fa-sign-in-alt mr-3"></i>Đăng nhập</Link>
+                                        <button 
+                                            onClick={() => setShowAuthModal(true)}
+                                            style={{ all: 'unset', cursor: 'pointer', color: 'inherit' }}
+                                        >
+                                            <i className="fas fa-sign-in-alt mr-3"></i>Đăng nhập
+                                        </button>
                                     </li>
                                     <li>
                                         <Link to="/register"><i className="fas fa-user-plus mr-3" style={{ marginLeft: '10px' }}></i>Đăng kí</Link>
@@ -135,6 +196,20 @@ function Header() {
                                 </Link>
                             </div>
                             <div className="mobile_cart visible-sm visible-xs">
+                                {isAuthenticated && user && (
+                                    <Link to="/account" className="header__second__user--icon" style={{ marginRight: '10px' }}>
+                                        <img 
+                                            src={user.avatar ? user.avatar : "/assets/img/product/noavatar.png"} 
+                                            alt="User" 
+                                            style={{ 
+                                                width: '28px', 
+                                                height: '28px', 
+                                                borderRadius: '50%',
+                                                objectFit: 'cover'
+                                            }} 
+                                        />
+                                    </Link>
+                                )}
                                 <Link to="/cart" className="header__second__cart--icon">
                                     <i className="fas fa-shopping-cart"></i>
                                     {/* <span id="header__second__cart--notice" className="header__second__cart--notice">3</span>  */}
@@ -143,7 +218,7 @@ function Header() {
                                 <Link to="/wishlist" className="header__second__like--icon">
                                     <i className="far fa-heart"></i>
                                     {/* <span id="header__second__like--notice" className="header__second__like--notice">3</span>     */}
-                                    {wishlistCount > 0 && <span className="header__second__like--notice">{{ wishlistCount }}</span>}
+                                    {wishlistCount > 0 && <span className="header__second__like--notice">{wishlistCount}</span>}
                                 </Link>
                             </div>
                         </div>
@@ -184,6 +259,15 @@ function Header() {
                     </div>
                 </div>
             </div>
+            <AuthModal 
+                isOpen={showAuthModal} 
+                onClose={() => setShowAuthModal(false)}
+                onGuestMode={() => {
+                    toast.info('Bạn đang duyệt với tư cách khách');
+                }}
+            />
+            <div className={`overlay ${isMobileMenuOpen ? '' : 'hidden'}`} onClick={toggleMobileMenu}></div>
+            <MobileMenu isOpen={isMobileMenuOpen} toggleMenu={toggleMobileMenu} user={user} isAuthenticated={isAuthenticated} />
             <nav className="header_nav hidden-sm hidden-xs">
                 <div className="container">
                     <ul className="header_nav-list nav">

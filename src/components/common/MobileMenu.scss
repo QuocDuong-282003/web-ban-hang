@@ -1,0 +1,680 @@
+// ============ VARIABLES ============
+$primary-color: #ee4d2d;
+$hover-color: #d84322;
+$text-primary: #333;
+$text-secondary: #666;
+$text-light: #999;
+$bg-light: #f8f9fa;
+$border-color: #e0e0e0;
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+
+// ============ MOBILE MENU CONTAINER ============
+.mobile-main-menu {
+    height: 100%;
+    overflow-y: auto;
+    width: 320px;
+    position: fixed;
+    background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
+    z-index: 999999 !important;
+    top: 0 !important;
+    left: 0 !important;
+    transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), 
+                box-shadow 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    transform: translateX(-320px);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+
+    &::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+
+        &:hover {
+            background: #a8a8a8;
+        }
+    }
+
+    &.xyz {
+        transform: translateX(0);
+        box-shadow: $shadow-lg;
+        animation: slideInFromLeft 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+}
+
+@keyframes slideInFromLeft {
+    0% {
+        transform: translateX(-320px);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+    50% {
+        transform: translateX(10px);
+    }
+    100% {
+        transform: translateX(0);
+        box-shadow: $shadow-lg;
+    }
+}
+
+// ============ DRAWER HEADER ============
+.drawer-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.3;
+    }
+
+    a {
+        text-decoration: none;
+        color: #fff;
+    }
+}
+
+.mobile-menu-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.05) rotate(90deg);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    &:active {
+        transform: scale(0.95) rotate(90deg);
+    }
+
+    i {
+        line-height: 1;
+        font-weight: 600;
+    }
+}
+
+.drawer-header--auth-wrapper {
+    position: relative;
+    z-index: 1;
+    display: block;
+}
+
+.drawer-header--auth {
+    display: flex;
+    align-items: center;
+    margin: 0 16px;
+    padding: 16px;
+    position: relative;
+    z-index: 1;
+    transition: all 0.2s ease;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+
+    &:active {
+        transform: scale(0.98);
+    }
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+}
+
+._object {
+    width: 50px;
+    height: 50px;
+    margin-right: 14px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.2);
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border: 0 none;
+    }
+}
+
+._body {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #fff;
+    font-weight: 500;
+    flex: 1;
+
+    br {
+        display: block;
+        margin-top: 2px;
+    }
+
+    &:first-line {
+        font-size: 15px;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 2px;
+    }
+}
+
+// ============ AUTH MENU ============
+.ul-first-menu {
+    margin: 0;
+    padding: 12px 0;
+    list-style: none;
+    background: #fff;
+    border-bottom: 1px solid $border-color;
+
+    li {
+        margin: 0;
+        padding: 0;
+
+        a {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            color: $text-primary;
+            width: 100%;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+
+            &:hover {
+                background-color: $bg-light;
+                border-left-color: $primary-color;
+                color: $primary-color;
+                padding-left: 24px;
+            }
+
+            &:active {
+                background-color: #f0f0f0;
+            }
+        }
+    }
+}
+
+// ============ NAVIGATION MENU ============
+.la-scroll-fix-infor-user {
+    overflow: auto;
+    background: #fff;
+}
+
+.la-title-nav-items {
+    display: none;
+}
+
+.la-nav-list-items {
+    padding: 8px 0;
+    background: #fff;
+    overflow-y: auto;
+}
+
+.ng-scope {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.2s ease;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background-color: $bg-light;
+    }
+
+    a {
+        display: flex;
+        align-items: center;
+        color: $text-primary;
+        font-size: 15px;
+        font-weight: 500;
+        width: 100%;
+        padding: 16px 20px;
+        position: relative;
+        text-decoration: none;
+        transition: all 0.2s ease;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: $primary-color;
+            transform: scaleY(0);
+            transition: transform 0.2s ease;
+        }
+
+        &:hover {
+            color: $primary-color;
+            padding-left: 24px;
+
+            &::before {
+                transform: scaleY(1);
+            }
+        }
+
+        &.active {
+            color: $primary-color;
+            background-color: rgba($primary-color, 0.08);
+            font-weight: 600;
+
+            &::before {
+                transform: scaleY(1);
+            }
+        }
+
+        i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            color: $text-secondary;
+            font-size: 16px;
+            transition: color 0.2s ease;
+        }
+
+        &:hover i,
+        &.active i {
+            color: $primary-color;
+        }
+    }
+}
+
+// ============ SUBMENU ============
+.ul-has-child1 {
+    display: none;
+    background: $bg-light;
+    padding: 8px 0;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ng-has-child1 {
+    position: relative;
+    border-bottom: 1px solid #f0f0f0;
+
+    > div {
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        transition: all 0.2s ease;
+        color: $text-primary;
+        font-size: 15px;
+        font-weight: 500;
+        position: relative;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: $primary-color;
+            transform: scaleY(0);
+            transition: transform 0.2s ease;
+        }
+
+        &:hover {
+            background-color: $bg-light;
+            color: $primary-color;
+            padding-left: 24px;
+
+            &::before {
+                transform: scaleY(1);
+            }
+
+            span i {
+                color: $primary-color;
+            }
+        }
+
+        a {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            padding: 0;
+            color: inherit;
+            text-decoration: none;
+
+            i {
+                margin-right: 12px;
+                width: 20px;
+                text-align: center;
+                color: $text-secondary;
+                font-size: 16px;
+                transition: color 0.2s ease;
+            }
+        }
+
+        span {
+            i {
+                color: $text-secondary;
+                font-size: 12px;
+                transition: transform 0.3s ease, color 0.2s ease;
+            }
+        }
+    }
+
+    &.open {
+        > div {
+            color: $primary-color;
+
+            &::before {
+                transform: scaleY(1);
+            }
+
+            span i {
+                color: $primary-color;
+                transform: rotate(180deg);
+            }
+        }
+
+        .ul-has-child1 {
+            display: block;
+        }
+    }
+}
+
+.ng-has-child2 {
+    border: none;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    background: #fff;
+
+    > div {
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px 12px 32px;
+        transition: all 0.2s ease;
+
+        &:hover {
+            background-color: rgba($primary-color, 0.05);
+        }
+
+        span i {
+            color: $text-secondary;
+            font-size: 12px;
+            transition: transform 0.3s ease, color 0.2s ease;
+        }
+    }
+
+    &.open {
+        > div span i {
+            color: $primary-color;
+            transform: rotate(180deg);
+        }
+
+        .ul-has-child2 {
+            display: block;
+        }
+    }
+}
+
+.ul-has-child2 {
+    padding: 8px 0;
+    display: none;
+    background: #fff;
+    animation: slideDown 0.3s ease-out;
+
+    li {
+        border: none;
+        padding: 0;
+
+        a {
+            padding: 10px 20px 10px 48px;
+            font-size: 14px;
+            color: $text-secondary;
+            font-weight: 400;
+
+            &:hover {
+                color: $primary-color;
+                background-color: rgba($primary-color, 0.05);
+            }
+        }
+    }
+}
+
+// ============ SUPPORT SECTION ============
+.mobile-support {
+    margin: 0;
+    padding: 10px 16px 12px;
+    list-style: none;
+    background: #f8f9fa;
+    border-top: 1px solid $border-color;
+
+    li {
+        margin-bottom: 0;
+        display: flex;
+        align-items: center;
+        font-size: 13px;
+        padding: 4px 0;
+
+        &:first-child {
+            margin-bottom: 6px;
+            padding: 0;
+        }
+
+        &:last-child {
+            padding-bottom: 0;
+        }
+
+        a {
+            color: $text-primary;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 0;
+            gap: 10px;
+
+            &:hover {
+                color: $primary-color;
+            }
+
+            i {
+                width: 16px;
+                text-align: center;
+                color: $primary-color;
+                font-size: 14px;
+                flex-shrink: 0;
+            }
+
+            .support-label {
+                color: $text-secondary;
+                font-weight: 600;
+                font-size: 12px;
+                flex-shrink: 0;
+            }
+
+            .support-value {
+                color: $text-primary;
+                font-weight: 500;
+                flex: 1;
+                word-break: break-all;
+                font-size: 13px;
+            }
+        }
+    }
+}
+
+.drawer-text-support {
+    color: $text-secondary;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: block;
+    padding: 0;
+}
+
+// ============ USER DROPDOWN MENU ============
+.mobile-user-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: $shadow-md;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), 
+                opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), 
+                visibility 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    border-radius: 0 0 8px 8px;
+
+    &--open {
+        max-height: 300px;
+        opacity: 1;
+        visibility: visible;
+        padding: 8px 0;
+    }
+}
+
+.mobile-user-dropdown-item {
+    margin: 0;
+    padding: 0;
+
+    &--separator {
+        height: 1px;
+        background: linear-gradient(to right, transparent, $border-color, transparent);
+        margin: 8px 16px;
+    }
+}
+
+.mobile-user-dropdown-link {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    color: $text-primary;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    position: relative;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: $primary-color;
+        transform: scaleX(0);
+        transition: transform 0.2s ease;
+    }
+
+    &:hover {
+        background-color: $bg-light;
+        padding-left: 24px;
+        color: $primary-color;
+
+        &::before {
+            transform: scaleX(1);
+        }
+
+        i {
+            color: $primary-color;
+            transform: scale(1.1);
+        }
+    }
+
+    i {
+        margin-right: 14px;
+        width: 20px;
+        text-align: center;
+        color: $text-secondary;
+        font-size: 16px;
+        transition: all 0.2s ease;
+    }
+
+    span {
+        flex: 1;
+    }
+
+    &--logout {
+        color: #d32f2f;
+
+        i {
+            color: #d32f2f;
+        }
+
+        &:hover {
+            background-color: rgba(211, 47, 47, 0.08);
+            color: #b71c1c;
+
+            i {
+                color: #b71c1c;
+            }
+        }
+    }
+}

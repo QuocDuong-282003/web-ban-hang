@@ -51,10 +51,6 @@ const LoginSystemPage = () => {
                 return setError('Chỉ tài khoản admin mới có quyền truy cập');
             }
 
-
-            console.log("User đăng nhập:", user);
-            console.log("Nhận được Token:", token);
-
             //  Lưu chuỗi token vào localStorage với key là "token"
             localStorage.setItem('token', token);
 

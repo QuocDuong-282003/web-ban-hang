@@ -40,7 +40,6 @@ const ListCategory = () => {
         setError(null);
         try {
             const response = await getAllCategories();
-            console.log("checkres", response);
             const categoriesData = response.data?.data || response.data || [];
             setAllCategories(Array.isArray(categoriesData) ? categoriesData : []);
         } catch (err) {

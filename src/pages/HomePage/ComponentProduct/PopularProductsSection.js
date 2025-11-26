@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import '../HomePage.scss';
 
 function PopularProductsSection({ products }) {
     if (!products || products.length === 0) {

@@ -5,7 +5,8 @@ import MobileMenu from '../components/common/MobileMenu';
 import GoToTop from '../components/common/GoToTop';
 import ModalQuickView from '../components/common/ModalQuickView';
 import { Link } from 'react-router-dom';
-import PolicySection from '../components/Home/PolicySection'; // <<<<<< THÊM IMPORT NÀY
+import PolicySection from '../components/Home/PolicySection';
+import './HomePage.scss';
 
 // Dữ liệu mẫu (trong thực tế, bạn sẽ fetch từ API hoặc import từ file data)
 const sampleProducts = {
@@ -155,13 +156,15 @@ function HomePage() {
                             <div className="row">
                                 {sampleProducts.popular.map(product => (
                                     <div className="col-lg-4 col-md-6 col-sm-12 mb-20" key={product.id}>
-                                        <div className="card" style={{ width: '100%' }}>
-                                            <img className="card-img-top" src={product.img} alt={product.name} style={{ width: '100%' }} />
+                                        <div className="card">
+                                            <img className="card-img-top" src={product.img} alt={product.name} />
                                             <div className="card-body">
                                                 <h4 className="card-title">{product.name}</h4>
-                                                <p className="card-text description" style={{ fontWeight: 400 }}>{product.description}</p>
-                                                <Link to={product.detailLink} title={product.name} className="btn btn-buynow">Xem ngay
-                                                    <i className="fas fa-arrow-right" style={{ fontSize: '16px', marginLeft: '5px' }}></i></Link>
+                                                <p className="card-text description">{product.description}</p>
+                                                <Link to={product.detailLink} title={product.name} className="btn btn-buynow">
+                                                    Xem ngay
+                                                    <i className="fas fa-arrow-right"></i>
+                                                </Link>
                                             </div>
                                         </div>
                                     </div>
@@ -176,15 +179,35 @@ function HomePage() {
                                 {sampleProducts.new.map(product => (
                                     <div className="col-lg-3 col-md-6 col-sm-12 mb-20" key={product.id}>
                                         <Link to={product.detailLink} className="product__new-item">
-                                            <div className="card" style={{ width: "100%" }}>
+                                            <div className="card">
                                                 <div>
                                                     <img className="card-img-top" src={product.img} alt={product.name} />
                                                     <form action="" className="hover-icon hidden-sm hidden-xs">
                                                         <input type="hidden" />
-                                                        <button className="btn-add-to-cart" title="Mua ngay" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('Thêm vào giỏ: ' + product.name) }}>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-add-to-cart"
+                                                            title="Mua ngay"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                alert('Thêm vào giỏ: ' + product.name);
+                                                            }}
+                                                        >
                                                             <i className="fas fa-cart-plus"></i>
                                                         </button>
-                                                        <button data-toggle="modal" data-target="#myModalQuickView" className="quickview" title="Xem nhanh" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openQuickView(product); }}>
+                                                        <button
+                                                            type="button"
+                                                            data-toggle="modal"
+                                                            data-target="#myModalQuickView"
+                                                            className="quickview"
+                                                            title="Xem nhanh"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                openQuickView(product);
+                                                            }}
+                                                        >
                                                             <i className="fas fa-search"></i>
                                                         </button>
                                                     </form>
@@ -224,15 +247,35 @@ function HomePage() {
                                 {sampleProducts.hot.map(product => (
                                     <div className="col-lg-3 col-md-6 col-sm-12 mb-20" key={product.id}>
                                         <Link to={product.detailLink} className="product__new-item">
-                                            <div className="card" style={{ width: "100%" }}>
+                                            <div className="card">
                                                 <div>
                                                     <img className="card-img-top" src={product.img} alt={product.name} />
                                                     <form action="" className="hover-icon hidden-sm hidden-xs">
                                                         <input type="hidden" />
-                                                        <button className="btn-add-to-cart" title="Mua ngay" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('Thêm vào giỏ: ' + product.name) }}>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-add-to-cart"
+                                                            title="Mua ngay"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                alert('Thêm vào giỏ: ' + product.name);
+                                                            }}
+                                                        >
                                                             <i className="fas fa-cart-plus"></i>
                                                         </button>
-                                                        <button data-toggle="modal" data-target="#myModalQuickView" className="quickview" title="Xem nhanh" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openQuickView(product); }}>
+                                                        <button
+                                                            type="button"
+                                                            data-toggle="modal"
+                                                            data-target="#myModalQuickView"
+                                                            className="quickview"
+                                                            title="Xem nhanh"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                openQuickView(product);
+                                                            }}
+                                                        >
                                                             <i className="fas fa-search"></i>
                                                         </button>
                                                     </form>
@@ -277,15 +320,35 @@ function HomePage() {
                                 {sampleProducts.youMayLike.map(product => (
                                     <div className="col-lg-3 col-md-6 col-sm-12 mb-20" key={product.id}>
                                         <Link to={product.detailLink} className="product__new-item">
-                                            <div className="card" style={{ width: "100%" }}>
+                                            <div className="card">
                                                 <div>
                                                     <img className="card-img-top" src={product.img} alt={product.name} />
                                                     <form action="" className="hover-icon hidden-sm hidden-xs">
                                                         <input type="hidden" />
-                                                        <button className="btn-add-to-cart" title="Mua ngay" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert('Thêm vào giỏ: ' + product.name) }}>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-add-to-cart"
+                                                            title="Mua ngay"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                alert('Thêm vào giỏ: ' + product.name);
+                                                            }}
+                                                        >
                                                             <i className="fas fa-cart-plus"></i>
                                                         </button>
-                                                        <button data-toggle="modal" data-target="#myModalQuickView" className="quickview" title="Xem nhanh" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openQuickView(product); }}>
+                                                        <button
+                                                            type="button"
+                                                            data-toggle="modal"
+                                                            data-target="#myModalQuickView"
+                                                            className="quickview"
+                                                            title="Xem nhanh"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                openQuickView(product);
+                                                            }}
+                                                        >
                                                             <i className="fas fa-search"></i>
                                                         </button>
                                                     </form>
@@ -328,11 +391,11 @@ function HomePage() {
                             {sampleNews.map(newsItem => (
                                 <div className="col-lg-4 col-md-4 col-sm-12 mb-20" key={newsItem.id}>
                                     <Link to={newsItem.detailLink} className="product__new-item">
-                                        <div className="card" style={{ width: '100%' }}>
-                                            <img className="card-img-top" src={newsItem.img} alt={newsItem.title} style={{ height: "230px", objectFit: "cover" }} />
+                                        <div className="card">
+                                            <img className="card-img-top" src={newsItem.img} alt={newsItem.title} />
                                             <div className="card-body">
                                                 <h5 className="card-title description title-news">{newsItem.title}</h5>
-                                                <p className="card-text description" style={{ fontWeight: 400 }}>{newsItem.excerpt}</p>
+                                                <p className="card-text description">{newsItem.excerpt}</p>
                                             </div>
                                         </div>
                                     </Link>

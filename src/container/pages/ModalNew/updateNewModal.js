@@ -53,8 +53,6 @@ const UpdateNewModal = ({ isOpen, onClose, onSave, newsItem }) => {
             const response = await uploadContentImage(file);
 
             if (response && response.data && response.data.url) {
-                console.log('Server returned URL:', response.data.url);
-
                 return response.data.url;
             } else {
                 toast.error("Server không trả về URL hợp lệ.");

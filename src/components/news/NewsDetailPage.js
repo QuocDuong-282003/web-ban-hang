@@ -118,7 +118,6 @@ function NewsDetailPage() {
                         </p>
                     </div>
                     <div className="content-container">
-                        {console.log('Độ dài nội dung:', typeof article.content, article.content?.length)}
                         <div
                             className="article-content"
                             style={{

@@ -81,10 +81,8 @@ const ContactTable = () => {
             setAllContact(prev =>
                 prev.map(c => (c._id === contactId ? response.data.data : c))
             );
-            console.log(contactId, status);
 
         } catch (error) {
-            console.log('check daatta', error)
             toast.error('Xử lý thất bại! Vui lòng thử lại!');
         }
     };

@@ -1,0 +1,303 @@
+// ============ VARIABLES ============
+$primary-color: #ee4d2d;
+$hover-color: #d84322;
+$text-primary: #333;
+$text-secondary: #666;
+$text-light: #999;
+$bg-light: #f8f9fa;
+$border-color: #e0e0e0;
+$border-radius: 12px;
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+// ============ WRAPPER ============
+.wrapper {
+    padding: 30px 0;
+    min-height: 60vh;
+}
+
+// ============ SIDEBAR ============
+.heading {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    background: #fff;
+    border-radius: $border-radius;
+    box-shadow: $shadow-sm;
+    border: none;
+
+    &-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid $primary-color;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+
+        &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+        }
+    }
+
+    &-name_acc {
+        font-size: 20px;
+        font-weight: 600;
+        color: $text-primary;
+        white-space: nowrap;
+    }
+}
+
+// Avatar camera icon
+.heading > div[style*="position: relative"] {
+    position: relative;
+
+    svg {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: #fff;
+        border-radius: 50%;
+        padding: 6px;
+        font-size: 18px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.2s ease;
+        color: $primary-color;
+        z-index: 2;
+
+        &:hover {
+            background: $primary-color;
+            color: #fff;
+            transform: scale(1.1);
+        }
+    }
+}
+
+// ============ MENU NAVIGATION ============
+.menu-manager {
+    background: #fff;
+    border-radius: $border-radius;
+    box-shadow: $shadow-sm;
+    padding: 8px;
+    margin-top: 0;
+}
+
+.my-profile-title,
+.my-order-title,
+.my-password-title {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: $text-primary;
+    font-size: 15px;
+    font-weight: 500;
+
+    &:hover {
+        background: $bg-light;
+        color: $primary-color;
+    }
+
+    &.active {
+        background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($primary-color, 0.05) 100%);
+        color: $primary-color;
+        font-weight: 600;
+        border-left: 3px solid $primary-color;
+    }
+}
+
+.my-profile-icon,
+.my-order-icon,
+.my-password-icon {
+    width: 24px;
+    text-align: center;
+    margin-right: 12px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.my-profile-name,
+.my-order-name,
+.my-password-name {
+    flex: 1;
+}
+
+// ============ CONTENT AREA ============
+.tab-content {
+    background: #fff;
+    border-radius: $border-radius;
+    box-shadow: $shadow-sm;
+    padding: 30px;
+    min-height: 500px;
+
+    &.active {
+        display: block;
+    }
+}
+
+.heading-edit-account,
+.heading-edit-password {
+    h2 {
+        font-size: 24px;
+        font-weight: 700;
+        color: $text-primary;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid $bg-light;
+    }
+}
+
+// ============ FORM STYLES ============
+form {
+    max-width: 600px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+
+    &:last-of-type {
+        margin-bottom: 32px;
+    }
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-primary;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+    color: $text-primary;
+    background: #fff;
+    border: 2px solid $border-color;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    outline: none;
+    font-family: inherit;
+
+    &:focus {
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+    }
+
+    &:disabled {
+        background: $bg-light;
+        color: $text-secondary;
+        cursor: not-allowed;
+        border-color: #e8e8e8;
+    }
+
+    &::placeholder {
+        color: $text-light;
+    }
+}
+
+// Password visibility toggle
+.form-group > div[style*="display: flex"] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    span {
+        cursor: pointer;
+        color: $text-secondary;
+        font-size: 14px;
+        transition: color 0.2s ease;
+        padding: 4px 8px;
+        border-radius: 4px;
+
+        &:hover {
+            color: $primary-color;
+            background: rgba($primary-color, 0.05);
+        }
+
+        i {
+            font-size: 16px;
+        }
+    }
+}
+
+// ============ BUTTON ============
+.form-submit {
+    background: linear-gradient(135deg, $primary-color 0%, $hover-color 100%);
+    color: #fff;
+    border: none;
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 120px;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba($primary-color, 0.4);
+        background: linear-gradient(135deg, $hover-color 0%, $primary-color 100%);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+// ============ RESPONSIVE ============
+@media (max-width: 768px) {
+    .wrapper {
+        padding: 20px 0;
+    }
+
+    .heading {
+        padding: 16px;
+        margin-bottom: 16px;
+
+        &-img {
+            width: 60px;
+            height: 60px;
+        }
+
+        &-name_acc {
+            font-size: 18px;
+        }
+    }
+
+    .menu-manager {
+        margin-bottom: 20px;
+    }
+
+    .tab-content {
+        padding: 20px;
+    }
+
+    .heading-edit-account h2,
+    .heading-edit-password h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+}
+

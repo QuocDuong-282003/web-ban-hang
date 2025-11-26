@@ -53,10 +53,7 @@ const AddNewModal = ({ isOpen, onClose, onSave }) => {
 
             // 2. Kiểm tra xem server có trả về đúng định dạng không
             if (response && response.data && response.data.url) {
-                // 3. Log ra để kiểm tra URL có đúng không
-                console.log('Server returned URL:', response.data.url);
-
-                // 4. Trả về CHỈ chuỗi URL cho MdEditor
+                // Trả về CHỈ chuỗi URL cho MdEditor
                 return response.data.url;
             } else {
                 // Nếu server trả về lỗi hoặc định dạng sai

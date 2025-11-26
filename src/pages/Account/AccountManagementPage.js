@@ -13,6 +13,7 @@ import MyOrdersPage from './MyOrdersPage';
 
 import { updateUserProfile, changeUserPassword, uploadAvatar } from '../../container/services/userService';
 import { userLoginSuccess } from '../../container/redux/userAuthSlice';
+import './AccountManagementPage.scss';
 
 function useQuery() {
     return new URLSearchParams(useLocation().search);
@@ -135,36 +136,17 @@ function AccountManagementPage() {
                     <div className="row">
                         <div className="col-md-4 col-12">
                             {/* Avatar và tên user */}
-                            <div className="heading" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                            <div className="heading">
                                 <div style={{ position: 'relative', width: 80, height: 80 }}>
                                     <img
                                         src={avatarPreview}
                                         alt="User Avatar"
                                         className="heading-img"
-                                        style={{
-                                            width: 80,
-                                            height: 80,
-                                            borderRadius: '50%',
-                                            objectFit: 'cover',
-                                            cursor: 'pointer',
-                                            border: '2px solid #f00'
-                                        }}
                                         onClick={handleAvatarClick}
                                         title="Click để thay đổi ảnh đại diện"
                                     />
                                     <FaCamera
                                         onClick={handleAvatarClick}
-                                        style={{
-                                            position: 'absolute',
-                                            bottom: 4,
-                                            right: 4,
-                                            background: '#fff',
-                                            borderRadius: '50%',
-                                            padding: 4,
-                                            fontSize: 20,
-                                            cursor: 'pointer',
-                                            boxShadow: '0 0 4px #ccc'
-                                        }}
                                         title="Đổi ảnh đại diện"
                                     />
                                     <input
@@ -175,8 +157,7 @@ function AccountManagementPage() {
                                         onChange={handleAvatarChange}
                                     />
                                 </div>
-                                {/* Tên user không xuống dòng */}
-                                <span className="heading-name_acc" style={{ fontWeight: 600, fontSize: 18, whiteSpace: 'nowrap' }}>
+                                <span className="heading-name_acc">
                                     {user.name}
                                 </span>
                             </div>
@@ -202,12 +183,57 @@ function AccountManagementPage() {
                                     <div className="heading-edit-account">
                                         <h2>Hồ sơ của tôi</h2>
                                         <form onSubmit={handleProfileSubmit}>
-                                            {/* ĐÃ BỎ PHẦN CẬP NHẬT AVATAR Ở ĐÂY */}
-                                            <div className="form-group"><label htmlFor="name" className="form-label">Tên đầy đủ</label><input id="name" name="name" type="text" className="form-control" value={profileData.name} onChange={handleProfileChange} /></div>
-                                            <div className="form-group"><label htmlFor="email" className="form-label">Email</label><input id="email" name="email" type="email" className="form-control" value={profileData.email} disabled /></div>
-                                            <div className="form-group"><label htmlFor="address" className="form-label">Địa chỉ</label><input id="address" name="address" type="text" className="form-control" value={profileData.address} onChange={handleProfileChange} /></div>
-                                            <div className="form-group"><label htmlFor="phone" className="form-label">Số điện thoại</label><input id="phone" name="phone" type="tel" className="form-control" value={profileData.phone} onChange={handleProfileChange} /></div>
-                                            <button type="submit" className="form-submit">Lưu</button>
+                                            <div className="form-group">
+                                                <label htmlFor="name" className="form-label">Tên đầy đủ</label>
+                                                <input 
+                                                    id="name" 
+                                                    name="name" 
+                                                    type="text" 
+                                                    className="form-control" 
+                                                    value={profileData.name} 
+                                                    onChange={handleProfileChange}
+                                                    placeholder="Nhập tên đầy đủ của bạn"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="email" className="form-label">Email</label>
+                                                <input 
+                                                    id="email" 
+                                                    name="email" 
+                                                    type="email" 
+                                                    className="form-control" 
+                                                    value={profileData.email} 
+                                                    disabled 
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="address" className="form-label">Địa chỉ</label>
+                                                <input 
+                                                    id="address" 
+                                                    name="address" 
+                                                    type="text" 
+                                                    className="form-control" 
+                                                    value={profileData.address} 
+                                                    onChange={handleProfileChange}
+                                                    placeholder="Nhập địa chỉ của bạn"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="phone" className="form-label">Số điện thoại</label>
+                                                <input 
+                                                    id="phone" 
+                                                    name="phone" 
+                                                    type="tel" 
+                                                    className="form-control" 
+                                                    value={profileData.phone} 
+                                                    onChange={handleProfileChange}
+                                                    placeholder="Nhập số điện thoại của bạn"
+                                                />
+                                            </div>
+                                            <button type="submit" className="form-submit">
+                                                <i className="fas fa-save" style={{ marginRight: '8px' }}></i>
+                                                Lưu thay đổi
+                                            </button>
                                         </form>
                                     </div>
                                 </div>
@@ -215,30 +241,65 @@ function AccountManagementPage() {
                             {/* Tab Đổi mật khẩu */}
                             {activeTab === 'password' && (
                                 <div className="tab-content active">
-                                    <div className="heading-edit-password"><h2>Đổi lại mật khẩu</h2></div>
+                                    <div className="heading-edit-password">
+                                        <h2>Đổi mật khẩu</h2>
+                                    </div>
                                     <form onSubmit={handlePasswordSubmit}>
                                         <div className="form-group">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <label className="form-label">Mật khẩu cũ</label>
-                                                <span onClick={() => setShowOldPassword(!showOldPassword)} style={{ cursor: 'pointer' }}><i className={`fas ${showOldPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i></span>
+                                                <span onClick={() => setShowOldPassword(!showOldPassword)} style={{ cursor: 'pointer' }}>
+                                                    <i className={`fas ${showOldPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                                </span>
                                             </div>
-                                            <input name="oldPassword" type={showOldPassword ? "text" : "password"} placeholder="Nhập mật khẩu cũ" className="form-control" value={passwordData.oldPassword} onChange={handlePasswordChange} required />
+                                            <input 
+                                                name="oldPassword" 
+                                                type={showOldPassword ? "text" : "password"} 
+                                                placeholder="Nhập mật khẩu cũ" 
+                                                className="form-control" 
+                                                value={passwordData.oldPassword} 
+                                                onChange={handlePasswordChange} 
+                                                required 
+                                            />
                                         </div>
                                         <div className="form-group">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <label className="form-label">Mật khẩu mới</label>
-                                                <span onClick={() => setShowNewPassword(!showNewPassword)} style={{ cursor: 'pointer' }}><i className={`fas ${showNewPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i></span>
+                                                <span onClick={() => setShowNewPassword(!showNewPassword)} style={{ cursor: 'pointer' }}>
+                                                    <i className={`fas ${showNewPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                                </span>
                                             </div>
-                                            <input name="newPassword" type={showNewPassword ? "text" : "password"} placeholder="Nhập mật khẩu mới" className="form-control" value={passwordData.newPassword} onChange={handlePasswordChange} required />
+                                            <input 
+                                                name="newPassword" 
+                                                type={showNewPassword ? "text" : "password"} 
+                                                placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)" 
+                                                className="form-control" 
+                                                value={passwordData.newPassword} 
+                                                onChange={handlePasswordChange} 
+                                                required 
+                                            />
                                         </div>
                                         <div className="form-group">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <label className="form-label">Xác nhận mật khẩu mới</label>
-                                                <span onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)} style={{ cursor: 'pointer' }}><i className={`fas ${showConfirmNewPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i></span>
+                                                <span onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)} style={{ cursor: 'pointer' }}>
+                                                    <i className={`fas ${showConfirmNewPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                                                </span>
                                             </div>
-                                            <input name="confirmNewPassword" type={showConfirmNewPassword ? "text" : "password"} placeholder="Xác nhận mật khẩu mới" className="form-control" value={passwordData.confirmNewPassword} onChange={handlePasswordChange} required />
+                                            <input 
+                                                name="confirmNewPassword" 
+                                                type={showConfirmNewPassword ? "text" : "password"} 
+                                                placeholder="Xác nhận mật khẩu mới" 
+                                                className="form-control" 
+                                                value={passwordData.confirmNewPassword} 
+                                                onChange={handlePasswordChange} 
+                                                required 
+                                            />
                                         </div>
-                                        <button type="submit" className="form-submit">Lưu</button>
+                                        <button type="submit" className="form-submit">
+                                            <i className="fas fa-key" style={{ marginRight: '8px' }}></i>
+                                            Đổi mật khẩu
+                                        </button>
                                     </form>
                                 </div>
                             )}

@@ -425,14 +425,30 @@ ul .level1 li a:hover {
     z-index: 999999 !important;
     top: 0 !important;
     left: 0 !important;
-    transition: transform 0.8s;
+    transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
     transform: translateX(-290px);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 .xyz{
     transform: translateX(0);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    animation: slideInFromLeft 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+@keyframes slideInFromLeft {
+    0% {
+        transform: translateX(-290px);
+        box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+    50% {
+        transform: translateX(10px);
+    }
+    100% {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    }
 }
 .overlay {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0);
     position:  fixed;
     top: 0;
     left: 0;
@@ -440,6 +456,33 @@ ul .level1 li a:hover {
     bottom: 0;
     z-index: 9999;
     cursor: pointer;
+    transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+.overlay:not(.hidden) {
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    animation: fadeInOverlay 0.3s ease-in-out;
+}
+.overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0);
+}
+@keyframes fadeInOverlay {
+    0% {
+        opacity: 0;
+        background-color: rgba(0, 0, 0, 0);
+    }
+    100% {
+        opacity: 1;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
 }
 .drawer-header {
     background-color: #000;

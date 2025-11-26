@@ -14,7 +14,7 @@ import PopularProductsSection from './ComponentProduct/PopularProductsSection';
 import ProductGridSection from './ComponentProduct/ProductGridSection';
 import NewsSection from './ComponentProduct/NewsSection';
 
-
+import './HomePage.scss';
 import {
     getPopularProducts,
     getNewestProducts,

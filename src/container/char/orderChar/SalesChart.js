@@ -16,9 +16,7 @@ const SalesChart = () => {
         const fetchChartData = async () => {
             setIsLoading(true);
             try {
-                // Thêm console.log để kiểm tra dữ liệu từ backend
                 const response = await getSalesStats(period);
-                console.log("Dữ liệu SalesChart từ API:", response.data);
                 setChartData(response.data);
             } catch (error) {
                 console.error(`Lỗi tải dữ liệu doanh thu theo ${period}:`, error);

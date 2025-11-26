@@ -67,7 +67,6 @@ const DiscountTable = () => {
 
 
     const handleSave = async (formData) => {
-        console.log('check data discount', formData)
         const isEditing = !!currentDiscount;
 
         try {

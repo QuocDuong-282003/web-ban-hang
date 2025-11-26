@@ -29,10 +29,18 @@ const userAuthSlice = createSlice({
         userLoginSuccess: (state, action) => {
             state.isAuthenticated = true;
             state.user = action.payload.user;
-            state.token = action.payload.token;
+            state.token = action.payload.token; // Can be null if using HttpOnly cookie
             state.error = null;
+            // Save user to localStorage for persistence
             localStorage.setItem('user', JSON.stringify(action.payload.user));
-            localStorage.setItem('token', action.payload.token);
+            // Only save token to localStorage if it's provided (not HttpOnly cookie)
+            if (action.payload.token) {
+                localStorage.setItem('token', action.payload.token);
+            } else {
+                // If token is null, it means we're using HttpOnly cookie
+                // Remove any existing token from localStorage
+                localStorage.removeItem('token');
+            }
         },
         userLoginFailure: (state, action) => {
             state.isAuthenticated = false;
