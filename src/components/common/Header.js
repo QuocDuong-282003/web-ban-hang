@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { userLogout } from '../../container/redux/userAuthSlice';
-import { getCartAPI, logout } from '../../container/services/userService';
+import { getCartAPI } from '../../container/services/userService';
+import { logout } from '../../container/services/authService';
 import { setCart, clearCart } from '../../components/store/actions/cartSlice';
 import { useClientSideSearch } from '../../container/hooks/useClientSideSearch';
 import Search from './Search/Search';
@@ -23,6 +24,7 @@ function Header() {
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
     const [searchQuery, setSearchQuery] = useState('');
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false); // State để control user dropdown menu
+    const userMenuRef = useRef(null); // Ref để detect click outside
 
     useEffect(() => {
         // Tạo một biến để kiểm tra xem component còn tồn tại không
@@ -52,6 +54,23 @@ function Header() {
             isMounted = false;
         };
     }, [isAuthenticated, dispatch]);
+
+    // Đóng menu khi click ra ngoài
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setIsUserMenuOpen(false);
+            }
+        };
+
+        if (isUserMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isUserMenuOpen]);
     // ============ HÀM XỬ LÝ ĐĂNG XUẤT ============
     /**
      * Handle logout
@@ -69,26 +88,26 @@ function Header() {
         try {
             // Step 1: Gọi API logout để clear HttpOnly cookie trên server
             await logout();
-            
+
             // Step 2: Clear Redux state và localStorage
             dispatch(userLogout());
-            
+
             // Step 3: Clear cart
             dispatch(clearCart());
-            
+
             // Step 4: Show success message
             toast.info("Bạn đã đăng xuất.");
-            
+
             // Step 5: Navigate về home
             navigate('/');
         } catch (error) {
             console.error('Logout error:', error);
-            
+
             // Ngay cả khi API logout fail, vẫn clear state và localStorage
             // để đảm bảo user được logout ở frontend
             dispatch(userLogout());
             dispatch(clearCart());
-            
+
             toast.info("Bạn đã đăng xuất.");
             navigate('/');
         }
@@ -115,62 +134,90 @@ function Header() {
                             {isAuthenticated && user ? (
                                 // GIAO DIỆN KHI  ĐĂNG NHẬP
                                 <ul className="nav nav__first right">
-                                    <li 
+                                    <li
+                                        ref={userMenuRef}
                                         className="nav-item nav-item__first nav-item__first-user"
-                                        onMouseEnter={() => setIsUserMenuOpen(true)}
-                                        onMouseLeave={() => setIsUserMenuOpen(false)}
                                     >
-                                        <img
-                                            src={user.avatar ? user.avatar : "/assets/img/product/noavatar.png"}
-                                            alt=""
-                                            className="nav-item__first-img"
-                                        />
-                                        <span className="nav-item__first-name">{user.name}</span>
+                                        <div
+                                            className="nav-item__first-trigger"
+                                            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                cursor: 'pointer',
+                                                gap: '8px'
+                                            }}
+                                        >
+                                            <img
+                                                src={user.avatar ? user.avatar : "/assets/img/product/noavatar.png"}
+                                                alt=""
+                                                className="nav-item__first-img"
+                                            />
+                                            <span className="nav-item__first-name">{user.name}</span>
+                                            <i
+                                                className={`fas fa-chevron-${isUserMenuOpen ? 'up' : 'down'}`}
+                                                style={{
+                                                    fontSize: '12px',
+                                                    color: '#666',
+                                                    transition: 'transform 0.2s ease'
+                                                }}
+                                            ></i>
+                                        </div>
 
                                         {/* ĐÂY LÀ MENU DROPDOWN - Modern Design */}
-                                        <ul className={`nav-item__first-menu ${isUserMenuOpen ? 'nav-item__first-menu--open' : ''}`}>
-                                            <li className="nav-item__first-item">
-                                                <Link 
-                                                    to="/account" 
-                                                    className="nav-item__first-link"
-                                                    onClick={() => setIsUserMenuOpen(false)}
-                                                >
-                                                    <i className="fas fa-user-circle"></i>
-                                                    <span>Tài khoản của tôi</span>
-                                                </Link>
-                                            </li>
-                                            <li className="nav-item__first-item">
-                                                <Link 
-                                                    to="/account?tab=order" 
-                                                    className="nav-item__first-link nav-item__first-link--order"
-                                                    onClick={() => setIsUserMenuOpen(false)}
-                                                >
-                                                    <i className="fas fa-shopping-bag"></i>
-                                                    <span>Đơn mua</span>
-                                                </Link>
-                                            </li>
-                                            <li className="nav-item__first-item nav-item__first-item--separator"></li>
-                                            {/* ===  NÚT ĐĂNG XUẤT === */}
-                                            <li className="nav-item__first-item">
-                                                <button
-                                                    onClick={() => {
-                                                        setIsUserMenuOpen(false);
-                                                        handleLogout();
-                                                    }}
-                                                    className="nav-item__first-link nav-item__first-link--logout"
-                                                >
-                                                    <i className="fas fa-sign-out-alt"></i>
-                                                    <span>Đăng xuất</span>
-                                                </button>
-                                            </li>
-                                        </ul>
+                                        {isUserMenuOpen && (
+                                            <ul className="nav-item__first-menu nav-item__first-menu--open">
+                                                <li className="nav-item__first-item">
+                                                    <Link
+                                                        to="/account"
+                                                        className="nav-item__first-link"
+                                                        onClick={() => setIsUserMenuOpen(false)}
+                                                    >
+                                                        <i className="fas fa-user-circle"></i>
+                                                        <span>Tài khoản của tôi</span>
+                                                    </Link>
+                                                </li>
+                                                <li className="nav-item__first-item">
+                                                    <Link
+                                                        to="/account?tab=order"
+                                                        className="nav-item__first-link nav-item__first-link--order"
+                                                        onClick={() => setIsUserMenuOpen(false)}
+                                                    >
+                                                        <i className="fas fa-shopping-bag"></i>
+                                                        <span>Đơn mua</span>
+                                                    </Link>
+                                                </li>
+                                                <li className="nav-item__first-item nav-item__first-item--separator"></li>
+                                                {/* ===  NÚT ĐĂNG XUẤT === */}
+                                                <li className="nav-item__first-item">
+                                                    <button
+                                                        onClick={() => {
+                                                            setIsUserMenuOpen(false);
+                                                            handleLogout();
+                                                        }}
+                                                        className="nav-item__first-link nav-item__first-link--logout"
+                                                        style={{
+                                                            width: '100%',
+                                                            textAlign: 'left',
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            padding: '10px 15px',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                    >
+                                                        <i className="fas fa-sign-out-alt"></i>
+                                                        <span>Đăng xuất</span>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        )}
                                     </li>
                                 </ul>
                             ) : (
                                 // GIAO DIỆN KHI CHƯA ĐĂNG NHẬP 
                                 <ul className="header_link right m-auto">
                                     <li>
-                                        <button 
+                                        <button
                                             onClick={() => setShowAuthModal(true)}
                                             style={{ all: 'unset', cursor: 'pointer', color: 'inherit' }}
                                         >
@@ -198,15 +245,15 @@ function Header() {
                             <div className="mobile_cart visible-sm visible-xs">
                                 {isAuthenticated && user && (
                                     <Link to="/account" className="header__second__user--icon" style={{ marginRight: '10px' }}>
-                                        <img 
-                                            src={user.avatar ? user.avatar : "/assets/img/product/noavatar.png"} 
-                                            alt="User" 
-                                            style={{ 
-                                                width: '28px', 
-                                                height: '28px', 
+                                        <img
+                                            src={user.avatar ? user.avatar : "/assets/img/product/noavatar.png"}
+                                            alt="User"
+                                            style={{
+                                                width: '28px',
+                                                height: '28px',
                                                 borderRadius: '50%',
                                                 objectFit: 'cover'
-                                            }} 
+                                            }}
                                         />
                                     </Link>
                                 )}
@@ -259,8 +306,8 @@ function Header() {
                     </div>
                 </div>
             </div>
-            <AuthModal 
-                isOpen={showAuthModal} 
+            <AuthModal
+                isOpen={showAuthModal}
                 onClose={() => setShowAuthModal(false)}
                 onGuestMode={() => {
                     toast.info('Bạn đang duyệt với tư cách khách');

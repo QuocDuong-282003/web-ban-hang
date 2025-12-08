@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { userLoginSuccess, userLogout } from './container/redux/userAuthSlice';
-import { getMe } from './container/services/userService';
+import { getMe } from './container/services/authService';
 import { path } from './components/utils/constant';
 
 // Public Pages

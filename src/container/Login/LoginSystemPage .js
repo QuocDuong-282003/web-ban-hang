@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { handleLoginApi, trackLogin } from '../services/userService';
+import { handleLoginApi } from '../services/authService';
+import { trackLogin } from '../services/userService';
 import { adminLoginSuccess } from '../redux/authSlice';
 //const jwt = require('jsonwebtoken');
 import './LoginSystemPage.css';

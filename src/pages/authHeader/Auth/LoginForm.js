@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { handleLoginApi } from '../../../container/services/userService';
+import { handleLoginApi } from '../../../container/services/authService';
 import { userLoginSuccess, userLoginFailure } from '../../../container/redux/userAuthSlice';
 
 function LoginForm() {

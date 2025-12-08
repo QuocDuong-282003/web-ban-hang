@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    checkEmailExist, updatePasswordUser
-
-} from '../services/userService';
+    checkEmailExist,
+    updatePasswordUser
+} from '../services/authService';
 import './ForgotPasswordPage.css';
 const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');

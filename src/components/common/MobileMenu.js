@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { userLogout } from '../../container/redux/userAuthSlice';
-import { logout } from '../../container/services/userService';
+import { logout } from '../../container/services/authService';
 import { clearCart } from '../../components/store/actions/cartSlice';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';

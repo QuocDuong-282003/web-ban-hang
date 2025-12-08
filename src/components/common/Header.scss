@@ -44,3 +44,96 @@
 .search-button i {
     font-size: 14px;
 }
+
+// ============ TẮT HOÀN TOÀN HIỆU ỨNG HOVER - CHỈ DÙNG CLICK ============
+// Menu chỉ hiển thị khi click (có class --open), KHÔNG hiển thị khi hover
+
+.nav-item__first-user {
+    // Tắt background color khi hover
+    &:hover {
+        background-color: transparent !important;
+    }
+    
+    // QUAN TRỌNG: Tắt hiển thị menu khi hover - chỉ hiển thị khi có class --open
+    &:hover .nav-item__first-menu:not(.nav-item__first-menu--open) {
+        display: none !important;
+    }
+    
+    // Tắt border color thay đổi khi hover
+    &:hover .nav-item__first-img {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+}
+
+.nav-item__first-trigger {
+    // Tắt background color khi hover
+    &:hover {
+        background-color: transparent !important;
+    }
+}
+
+// Menu chỉ hiển thị khi có class --open (khi click), không hiển thị khi hover
+.nav-item__first-menu {
+    // Chỉ hiển thị khi có class --open
+    display: none !important;
+    
+    &.nav-item__first-menu--open {
+        display: block !important;
+    }
+    
+    // Tắt background color khi hover menu
+    &:hover {
+        background-color: #1a1a1a !important;
+    }
+    
+    .nav-item__first-item {
+        // Tắt background color khi hover item
+        &:hover {
+            background-color: transparent !important;
+        }
+    }
+    
+    // Tắt tất cả hiệu ứng hover cho link
+    .nav-item__first-link {
+        &:hover {
+            background-color: transparent !important;
+            color: #ffffff !important;
+        }
+        
+        &:hover i {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+    }
+    
+    // Tắt hiệu ứng hover cho order link
+    .nav-item__first-link--order {
+        &:hover {
+            background-color: transparent !important;
+            color: #ff6b6b !important;
+        }
+        
+        &:hover i {
+            color: #ff6b6b !important;
+        }
+    }
+    
+    // Tắt hiệu ứng hover cho logout link
+    .nav-item__first-link--logout {
+        &:hover {
+            background-color: transparent !important;
+            color: #ffffff !important;
+        }
+        
+        &:hover i {
+            color: #ffffff !important;
+        }
+    }
+    
+    // Override cho legacy links
+    .nav-item__first-item a:not(.nav-item__first-link) {
+        &:hover {
+            background-color: transparent !important;
+            color: var(--white-color) !important;
+        }
+    }
+}

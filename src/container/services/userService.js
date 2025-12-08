@@ -60,149 +60,38 @@ API.interceptors.response.use(
     }
 );
 
-//  Login: POST /api/login /client
-export const handleLoginApi = (email, password) => {
-    return API.post('/login', { email, password });
-};
-
-// OTP Services (Old - không có password)
-export const sendOTP = (email, type = 'register') => {
-    return API.post('/send-otp', { email, type });
-};
-
-export const loginWithOTP = (email, otpCode) => {
-    return API.post('/login-with-otp', { email, otpCode });
-};
-
-export const registerWithOTP = (name, email, otpCode) => {
-    return API.post('/register-with-otp', { name, email, otpCode });
-};
-
-// ============ EMAIL + PASSWORD + OTP REGISTRATION (NEW) ============
-/**
- * Đăng ký với Email + Password + OTP
- * POST /api/auth/register - Gửi OTP đăng ký
- * 
- * @param {string} email - Email của user
- * @param {string} name - Tên của user
- * @param {string} password - Mật khẩu (tối thiểu 6 ký tự)
- * @returns {Promise} Response với message "OTP đã gửi vào email của bạn"
- */
-export const registerWithEmail = async (email, name, password) => {
-    const response = await API.post('/auth/register', {
-        email,
-        name,
-        password
-    }, {
-        withCredentials: true // Include cookies in request
-    });
-    return response.data;
-};
-
-/**
- * Verify OTP và tạo user mới với password
- * POST /api/auth/verify-otp - Verify OTP và đăng ký
- * 
- * Lưu ý: 
- * - API này chỉ nhận JSON (không gửi file avatar)
- * - Avatar sẽ được upload sau khi đăng ký thành công trong phần "Cập nhật hồ sơ"
- * - Content-Type: application/json (không phải multipart/form-data)
- * 
- * @param {string} email - Email của user
- * @param {string} code - Mã OTP 6 số
- * @param {string} name - Tên của user
- * @param {string} password - Mật khẩu
- * @returns {Promise} Response với user info và HttpOnly cookie được set
- */
-export const verifyOTPAndRegister = async (email, code, name, password) => {
-    // Gửi JSON (không phải FormData) - không có avatar
-    const response = await API.post('/auth/verify-otp', {
-        email,
-        code,
-        name,
-        password
-    }, {
-        withCredentials: true, // Include cookies in request
-        headers: {
-            'Content-Type': 'application/json' // Đảm bảo gửi JSON
-        }
-    });
-    return response.data;
-};
-
-// Google Login - Old endpoint (kept for compatibility)
-export const loginWithGoogle = (googleData) => {
-    return API.post('/login-with-google', googleData);
-};
-
-// ============ GOOGLE OAUTH2 LOGIN (NEW) ============
-/**
- * Google Login with ID Token (for @react-oauth/google)
- * POST /api/auth/google - Send Google id_token to backend
- * 
- * @param {string} id_token - Google ID token from @react-oauth/google
- * @returns {Promise} Response with user info and HttpOnly cookie set
- */
-export const loginWithGoogleToken = async (id_token) => {
-    const response = await API.post('/auth/google', { id_token }, {
-        withCredentials: true // Include cookies in request
-    });
-    return response.data;
-};
-
-/**
- * Get current authenticated user from HttpOnly cookie
- * GET /api/me - Returns user info based on HttpOnly cookie
- * 
- * @returns {Promise} Response with user info
- */
-export const getMe = async () => {
-    const response = await API.get('/me', {
-        withCredentials: true // Include cookies in request
-    });
-    return response.data;
-};
-
-/**
- * Logout - Clear HttpOnly cookie
- * POST /api/auth/logout - Clear cookie and logout
- * 
- * Endpoint này sẽ:
- * 1. Clear cookie 'token' (HTTPOnly) trên server
- * 2. Trả về success message
- * 
- * QUAN TRỌNG: Phải gọi API này trước khi clear Redux state
- * để đảm bảo cookie được xóa hoàn toàn trên server
- * 
- * @returns {Promise} Response với { success: true, message: "Logout successful" }
- */
-export const logout = async () => {
-    const response = await API.post('/auth/logout', {}, {
-        withCredentials: true // Include cookies in request để server có thể clear cookie
-    });
-    return response.data;
-};
-
-//  Check email tồn tại: POST /api/forgot-password
-export const checkEmailExist = (email) => {
-    return API.post('/forgot-password', { email }); // API backend
-};
-
-//  Đặt lại mật khẩu: POST /api/reset-password
-export const updatePasswordUser = (email, newPassword) => {
-    return API.post('/reset-password', { email, newPassword });
-};
-//
-// export const handleRegisterApi = (email, password, name, role = 'user') => {
-//     return API.post('/register', { email, password, name, role });
-// };
-export const handleRegisterApi = (formData) => {
-    return API.post('/register', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        }
-    });
-};
+// ============ LƯU Ý: TẤT CẢ API AUTHENTICATION ĐÃ CHUYỂN SANG authService.js ============
+// 
+// ✅ TẤT CẢ API AUTH ĐƯỢC TẬP TRUNG TẠI: src/container/services/authService.js
+// 
+// 📋 Danh sách API auth (import từ authService.js):
+// 
+// LOGIN:
+//   - handleLoginApi(email, password)
+//   - loginWithGoogleToken(id_token)
+//   - loginWithGoogle(googleData) [OLD]
+//   - loginWithOTP(email, otpCode)
+// 
+// REGISTER:
+//   - registerWithEmail(email, name, password)
+//   - verifyOTPAndRegister(email, code, name, password)
+//   - registerWithOTP(name, email, otpCode) [OLD]
+//   - handleRegisterApi(formData) [OLD]
+// 
+// OTP:
+//   - sendOTP(email, type)
+// 
+// USER INFO:
+//   - getMe() - Lấy thông tin user hiện tại
+// 
+// LOGOUT:
+//   - logout()
+// 
+// FORGOT PASSWORD:
+//   - checkEmailExist(email)
+//   - updatePasswordUser(email, newPassword)
+// 
+// ============ FILE NÀY CHỈ CHỨA API KHÔNG LIÊN QUAN ĐẾN AUTH ============
 // image
 export const uploadAvatar = (formData) => {
     return API.post('/upload-avatar', formData, {

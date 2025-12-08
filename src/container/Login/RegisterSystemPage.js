@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { handleRegisterApi } from '../services/userService';
+import { handleRegisterApi } from '../services/authService';
 import './LoginSystemPage.css';
 
 const RegisterSystemPage = () => {

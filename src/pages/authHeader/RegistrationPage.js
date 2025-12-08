@@ -5,7 +5,7 @@
 // import MobileMenu from '../../components/common/MobileMenu';
 // import GoToTop from '../../components/common/GoToTop';
 // import { toast } from 'react-toastify';
-// import { handleRegisterApi } from '../../container/services/userService';
+// import { handleRegisterApi } from '../../container/services/authService';
 
 
 // function RegistrationPage() {
@@ -91,7 +91,7 @@ import Footer from '../../components/common/Footer';
 import MobileMenu from '../../components/common/MobileMenu';
 import GoToTop from '../../components/common/GoToTop';
 import { toast } from 'react-toastify';
-import { handleRegisterApi } from '../../container/services/userService';
+import { handleRegisterApi } from '../../container/services/authService';
 
 
 function RegistrationPage() {
