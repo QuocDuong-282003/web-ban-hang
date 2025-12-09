@@ -26,6 +26,13 @@ function Header() {
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false); // State để control user dropdown menu
     const userMenuRef = useRef(null); // Ref để detect click outside
 
+    // Reset showAuthModal khi user đã đăng nhập thành công
+    useEffect(() => {
+        if (isAuthenticated && showAuthModal) {
+            setShowAuthModal(false);
+        }
+    }, [isAuthenticated, showAuthModal]);
+
     useEffect(() => {
         // Tạo một biến để kiểm tra xem component còn tồn tại không
         // Tránh lỗi "Can't perform a React state update on an unmounted component"
@@ -307,10 +314,14 @@ function Header() {
                 </div>
             </div>
             <AuthModal
+                key={showAuthModal ? 'open' : 'closed'} // Force re-render khi modal mở/đóng
                 isOpen={showAuthModal}
-                onClose={() => setShowAuthModal(false)}
+                onClose={() => {
+                    setShowAuthModal(false);
+                }}
                 onGuestMode={() => {
                     toast.info('Bạn đang duyệt với tư cách khách');
+                    setShowAuthModal(false);
                 }}
             />
             <div className={`overlay ${isMobileMenuOpen ? '' : 'hidden'}`} onClick={toggleMobileMenu}></div>

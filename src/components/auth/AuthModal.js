@@ -4,9 +4,10 @@ import { useDispatch } from 'react-redux';
 import { GoogleLogin } from '@react-oauth/google';
 import { userLoginSuccess } from '../../container/redux/userAuthSlice';
 import {
-    sendOTP,
     registerWithEmail,
     verifyOTPAndRegister,
+    forgotPasswordSendOTP,
+    verifyOTPAndResetPassword,
     loginWithGoogleToken,
     getMe,
     handleLoginApi
@@ -17,948 +18,413 @@ const AuthModal = ({ isOpen, onClose, onGuestMode }) => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    const [view, setView] = useState('main'); // main, email-login, email-register, forgot-password
+    const [view, setView] = useState('main'); // 'main', 'email-login', 'email-register', 'forgot-password'
+
+    // Form Data
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [otpCode, setOtpCode] = useState('');
+
+    // UI States
     const [otpSent, setOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const [showPassword, setShowPassword] = useState(false);
-    const [isGoogleLoggingIn, setIsGoogleLoggingIn] = useState(false); // State để ẩn modal khi Google login
 
-    // Error messages state - hiển thị dưới các input
-    const [errors, setErrors] = useState({
-        email: '',
-        password: '',
-        name: '',
-        otpCode: '',
-        general: '' // Lỗi chung không liên quan đến field cụ thể
-    });
-    const [successMessage, setSuccessMessage] = useState(''); // Thông báo thành công
+    // Messages
+    const [errors, setErrors] = useState({});
+    const [successMessage, setSuccessMessage] = useState('');
 
-    // Helper function để set error cho một field
-    const setError = (field, message) => {
-        setErrors(prev => ({ ...prev, [field]: message }));
-    };
+    // --- Helpers ---
+    const setError = (field, message) => setErrors(prev => ({ ...prev, [field]: message }));
+    const clearErrors = () => { setErrors({}); setSuccessMessage(''); };
+    const clearFieldError = (field) => setErrors(prev => ({ ...prev, [field]: '' }));
 
-    // Helper function để clear tất cả errors
-    const clearErrors = () => {
-        setErrors({
-            email: '',
-            password: '',
-            name: '',
-            otpCode: '',
-            general: ''
-        });
-        setSuccessMessage('');
-    };
-
-    // Helper function để clear error của một field khi user bắt đầu nhập
-    const clearFieldError = (field) => {
-        setErrors(prev => ({ ...prev, [field]: '' }));
-    };
-
-    // Đảm bảo khi modal mở, view luôn là 'main'
+    // Reset khi mở Modal
     useEffect(() => {
         if (isOpen) {
             setView('main');
             clearErrors();
-            setIsGoogleLoggingIn(false); // Reset khi modal mở lại
+            setLoading(false);
+            setOtpSent(false);
+            setCountdown(0);
+            setEmail('');
+            setPassword('');
+            setName('');
+            setOtpCode('');
         }
     }, [isOpen]);
 
-    // ============ GOOGLE OAUTH2 LOGIN ============
-    /**
-     * HÀM ĐĂNG NHẬP BẰNG GOOGLE
-     * Flow:
-     * 1. Nhận id_token từ Google OAuth popup
-     * 2. Gửi id_token đến backend /api/auth/google
-     * 3. Backend verify token, tạo/tìm user, set HttpOnly cookie
-     * 4. Lấy thông tin user từ /api/me (đọc từ cookie)
-     * 5. Cập nhật Redux state với thông tin user
-     * 6. Đóng modal và navigate về trang chủ
-     */
+    // Timer đếm ngược
+    useEffect(() => {
+        let timer;
+        if (countdown > 0) {
+            timer = setInterval(() => setCountdown(prev => prev - 1), 1000);
+        }
+        return () => clearInterval(timer);
+    }, [countdown]);
+
+    // --- GOOGLE LOGIN ---
     const handleGoogleLoginSuccess = async (credentialResponse) => {
         try {
-            // Gửi id_token đến backend để verify
             const response = await loginWithGoogleToken(credentialResponse.credential);
-
             if (response.message === 'Login success' && response.user) {
-                // Lấy thông tin user từ cookie
                 const meResponse = await getMe();
-
-                if (meResponse.success && meResponse.user) {
-                    // Cập nhật Redux state (token nằm trong HttpOnly cookie)
-                    dispatch(userLoginSuccess({
-                        user: meResponse.user,
-                        token: null
-                    }));
-
-                    // Đóng modal và navigate
-                    setIsGoogleLoggingIn(false);
-                    resetView();
-                    onClose();
+                if (meResponse.success) {
+                    dispatch(userLoginSuccess({ user: meResponse.user, token: null }));
                     navigate('/');
-                } else {
-                    // Hiển thị lại modal với lỗi
-                    setIsGoogleLoggingIn(false);
-                    setError('general', 'Đăng nhập thành công nhưng không thể lấy thông tin người dùng.');
                 }
             } else {
-                // Hiển thị lại modal với lỗi
-                setIsGoogleLoggingIn(false);
-                setError('general', response.message || 'Đăng nhập Google thất bại.');
+                alert(response.message || 'Đăng nhập Google thất bại.');
             }
         } catch (error) {
-            console.error('Google login error:', error);
-            // Hiển thị lại modal với lỗi
-            setIsGoogleLoggingIn(false);
-            const errorMessage = error.response?.data?.message ||
-                error.response?.data?.error ||
-                error.message ||
-                'Không thể đăng nhập bằng Google. Vui lòng thử lại.';
-            setError('general', errorMessage);
+            console.error(error);
+            alert('Lỗi đăng nhập Google.');
         }
     };
 
-    /**
-     * HÀM XỬ LÝ LỖI ĐĂNG NHẬP GOOGLE
-     * Được gọi khi Google authentication thất bại (user hủy, lỗi, etc.)
-     */
-    const handleGoogleLoginError = () => {
-        // Hiển thị lại modal khi user hủy hoặc có lỗi
-        setIsGoogleLoggingIn(false);
-        setError('general', 'Đăng nhập Google thất bại. Vui lòng thử lại.');
-    };
-
-    /**
-     * HÀM TRIGGER GOOGLE LOGIN BUTTON
-     * Ẩn modal và mở Google popup (không đóng modal để GoogleLogin component vẫn hoạt động)
-     */
     const triggerGoogleLogin = () => {
-        // Ẩn nội dung modal nhưng không đóng modal (để GoogleLogin component vẫn render)
-        setIsGoogleLoggingIn(true);
-        clearErrors();
-        // Tìm và click GoogleLogin button
+        onClose();
         setTimeout(() => {
-            const googleButton = document.querySelector('[data-testid="google-login-button"]');
-            if (googleButton) {
-                googleButton.click();
-            } else {
-                // Fallback: try to find any button inside GoogleLogin component
-                const buttons = document.querySelectorAll('button, div[role="button"]');
-                buttons.forEach(btn => {
-                    if (btn.textContent?.includes('Google') || btn.querySelector('svg')) {
-                        btn.click();
-                    }
-                });
-            }
-        }, 100);
+            const wrapper = document.getElementById('google-login-wrapper-hidden');
+            if (wrapper) wrapper.querySelector('div[role="button"]')?.click();
+        }, 50);
     };
 
-    // ============ EMAIL + PASSWORD LOGIN ============
-    /**
-     * HÀM ĐĂNG NHẬP BẰNG EMAIL VÀ MẬT KHẨU
-     * Flow:
-     * 1. Gửi email và password đến backend /api/login
-     * 2. Backend verify credentials và trả về token
-     * 3. Lấy thông tin user từ /api/me (đọc từ cookie nếu backend set)
-     * 4. Cập nhật Redux state với thông tin user
-     */
+    // --- EMAIL LOGIN ---
     const handleEmailLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
-        clearErrors(); // Clear previous errors
+        clearErrors();
 
         try {
-            // Validate input
-            let hasError = false;
-            if (!email) {
-                setError('email', 'Vui lòng nhập email');
-                hasError = true;
-            }
-            if (!password) {
-                setError('password', 'Vui lòng nhập mật khẩu');
-                hasError = true;
-            }
-            if (hasError) {
-                setLoading(false);
-                return;
-            }
+            // BƯỚC 1: Gọi API login - backend sẽ cấp token
+            const res = await handleLoginApi(email, password);
+            const data = res.data; // Axios response structure
 
-            // Gọi API login
-            const response = await handleLoginApi(email, password);
-            const data = response.data;
-
-            if (response.status === 200 && data.user) {
-                // Lấy thông tin user từ cookie hoặc dùng token từ response
-                try {
-                    const meResponse = await getMe();
-                    if (meResponse.success && meResponse.user) {
-                        dispatch(userLoginSuccess({
-                            user: meResponse.user,
-                            token: null
-                        }));
-                    } else {
-                        dispatch(userLoginSuccess({
-                            user: data.user,
-                            token: data.token
-                        }));
-                    }
-                } catch (error) {
-                    dispatch(userLoginSuccess({
-                        user: data.user,
-                        token: data.token
-                    }));
+            if (res.status === 200 && data.user) {
+                // BƯỚC 2: Lưu token vào localStorage trước (nếu có)
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
                 }
 
-                // Reset view về main trước khi đóng modal
-                resetView();
+                // BƯỚC 3: Đợi một chút để backend kịp set cookie (nếu dùng HttpOnly cookie)
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                // BƯỚC 4: Sau khi login thành công (có token/cookie), mới gọi /me để lấy thông tin đầy đủ
+                try {
+                    const me = await getMe();
+                    if (me.success && me.user) {
+                        // Backend dùng cookie → token = null
+                        dispatch(userLoginSuccess({ user: me.user, token: null }));
+                    } else {
+                        // Fallback: dùng user từ response login
+                        dispatch(userLoginSuccess({ user: data.user, token: data.token }));
+                    }
+                } catch (meError) {
+                    // Nếu /me fail, vẫn dùng user từ response login
+                    console.log('getMe failed, using login response:', meError);
+                    console.log('Error details:', meError.response?.data);
+                    dispatch(userLoginSuccess({ user: data.user, token: data.token }));
+                }
                 onClose();
                 navigate('/');
             } else {
-                setError('general', data.message || 'Email hoặc mật khẩu không đúng');
+                setError('general', data.message || 'Sai thông tin đăng nhập');
             }
         } catch (error) {
-            console.error('Email login error:', error);
-            const errorMessage = error.response?.data?.message ||
-                error.message ||
-                'Đăng nhập thất bại. Vui lòng thử lại.';
-            setError('general', errorMessage);
+            console.error('Login error:', error);
+            console.error('Login error response:', error.response?.data);
+            const errorMsg = error.response?.data?.message ||
+                error.response?.data?.msg ||
+                'Lỗi kết nối server';
+            setError('general', errorMsg);
         } finally {
             setLoading(false);
         }
     };
 
-    // Gửi OTP (dùng cho forgot password)
-    const handleSendOTP = async (type) => {
+    // --- REGISTER FLOW ---
+    const handleRegisterProcess = async (e) => {
+        e.preventDefault();
+
+        // GIAI ĐOẠN 1: Gửi thông tin -> Nhận OTP
+        if (!otpSent) {
+            clearErrors();
+            if (!name || !email || !password) return setError('general', 'Vui lòng điền đủ thông tin');
+            if (password.length < 6) return setError('password', 'Mật khẩu tối thiểu 6 ký tự');
+
+            setLoading(true);
+            try {
+                // Gọi API: /api/auth/register
+                const res = await registerWithEmail(email, name, password);
+                if (res.success) {
+                    setOtpSent(true);
+                    setCountdown(60);
+                    setSuccessMessage(res.message || 'Mã OTP đã được gửi vào email.');
+                } else {
+                    setError('general', res.message || 'Không thể gửi OTP');
+                }
+            } catch (error) {
+                setError('general', error.response?.data?.message || 'Lỗi gửi OTP. Email có thể đã tồn tại.');
+            } finally {
+                setLoading(false);
+            }
+        }
+        // GIAI ĐOẠN 2: Nhập OTP -> Hoàn tất
+        else {
+            clearErrors();
+            if (!otpCode || otpCode.length !== 6) return setError('otpCode', 'Mã OTP gồm 6 số');
+
+            setLoading(true);
+            try {
+                // Hiển thị loading ít nhất 3 giây để user biết đang xác nhận
+                const [apiResponse] = await Promise.all([
+                    verifyOTPAndRegister(email, otpCode, name, password),
+                    new Promise(resolve => setTimeout(resolve, 3000)) // Delay 3 giây
+                ]);
+
+                const res = apiResponse;
+                console.log('Verify OTP Response:', res);
+
+                // Kiểm tra đăng ký thành công
+                const isSuccess = res.success === true ||
+                    res.message === 'Đăng ký thành công' ||
+                    res.message === 'Xác thực thành công! Đăng ký hoàn tất.' ||
+                    res.verified === true ||
+                    res.user ||
+                    (res.data && res.data.user);
+
+                if (isSuccess) {
+                    // Đăng ký thành công → Chuyển về trang login
+                    // Email đã được giữ trong state (sẽ hiển thị sẵn)
+                    // Password sẽ được xóa để user phải nhập lại mật khẩu đã tạo
+                    const savedEmail = email; // Lưu email trước khi reset
+                    setPassword(''); // Xóa password để user phải nhập lại
+                    setOtpCode(''); // Xóa OTP code
+                    setOtpSent(false); // Reset OTP state
+                    setEmail(savedEmail); // Giữ lại email để hiển thị sẵn
+
+                    // Sử dụng successMessage từ response, hoặc fallback
+                    const message = res.successMessage ||
+                        res.message ||
+                        '✅ Xác thực email thành công! Vui lòng đăng nhập bằng email và mật khẩu vừa tạo.';
+
+                    // Xóa các lỗi cũ TRƯỚC khi set successMessage
+                    setErrors({});
+                    // Sau đó set successMessage
+                    setSuccessMessage(message);
+
+                    setView('email-login'); // Chuyển về trang login
+                } else {
+                    // Đăng ký thất bại
+                    setError('general', res.message || res.msg || res.data?.message || 'Đăng ký thất bại');
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                console.error('Error response:', error.response?.data);
+                const errorMsg = error.response?.data?.message ||
+                    error.response?.data?.msg ||
+                    error.message ||
+                    'Mã OTP không đúng hoặc đã hết hạn';
+                setError('otpCode', errorMsg);
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
+    // --- FORGOT PASSWORD FLOW ---
+    const handleForgotSendOTP = async () => {
         clearErrors();
-
-        if (!email) {
-            setError('email', 'Vui lòng nhập email');
-            return false;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            setError('email', 'Email không hợp lệ');
-            return false;
-        }
+        if (!email) return setError('email', 'Vui lòng nhập email');
 
         setLoading(true);
         try {
-            const response = await sendOTP(email, type);
-
-            if (response && response.status === 200 && response.data) {
+            // Gọi API: /api/auth/forgot-password-send-otp
+            const res = await forgotPasswordSendOTP(email);
+            if (res.success) {
                 setOtpSent(true);
                 setCountdown(60);
-                setSuccessMessage(response.data.message || 'Mã OTP đã được gửi đến email của bạn');
-
-                const timer = setInterval(() => {
-                    setCountdown((prev) => {
-                        if (prev <= 1) {
-                            clearInterval(timer);
-                            return 0;
-                        }
-                        return prev - 1;
-                    });
-                }, 1000);
-                return true;
+                setSuccessMessage(res.msg || 'Mã OTP khôi phục đã được gửi.'); // Backend trả về 'msg' ở dòng 1007 authController
             } else {
-                setError('general', response?.data?.message || 'Không thể gửi OTP');
-                return false;
+                setError('general', res.msg || 'Không thể gửi OTP');
             }
         } catch (error) {
-            let errorMessage = 'Không thể gửi OTP. Vui lòng thử lại sau.';
-            if (error.response) {
-                errorMessage = error.response.data?.message || error.message || 'Lỗi không xác định';
-            } else if (error.request) {
-                errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
-            } else {
-                errorMessage = error.message || 'Lỗi không xác định';
-            }
-            setError('general', errorMessage);
-            return false;
+            setError('general', error.response?.data?.msg || 'Email không tồn tại hoặc lỗi hệ thống.');
         } finally {
             setLoading(false);
         }
     };
 
+    const handleResetPassword = async () => {
+        clearErrors();
+        if (!otpCode || !password) return setError('general', 'Vui lòng nhập đủ thông tin');
+        if (password.length < 6) return setError('password', 'Mật khẩu mới phải > 6 ký tự');
 
-    const resetView = () => {
-        setView('main');
-        setEmail('');
-        setPassword('');
-        setName('');
-        setOtpCode('');
-        setOtpSent(false);
-        setCountdown(0);
-        setShowPassword(false);
-        setIsGoogleLoggingIn(false);
+        setLoading(true);
+        try {
+            // Gọi API: /api/auth/verify-forgot-password-otp
+            const res = await verifyOTPAndResetPassword(email, otpCode, password);
+            if (res.success) {
+                setSuccessMessage('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.');
+                setTimeout(() => {
+                    setView('email-login'); // Chuyển về trang đăng nhập
+                    setOtpSent(false);
+                    setPassword('');
+                    setOtpCode('');
+                    clearErrors();
+                }, 2000);
+            } else {
+                setError('general', res.msg || 'Lỗi đổi mật khẩu');
+            }
+        } catch (error) {
+            setError('general', error.response?.data?.msg || 'OTP sai hoặc hết hạn');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Hàm xử lý đóng modal và reset view
-    const handleClose = () => {
-        resetView();
-        onClose();
-    };
-
-    // Không render gì nếu modal không mở
-    if (!isOpen) {
-        // Nhưng vẫn render GoogleLogin component để có thể trigger popup
-        return (
-            <div className="google-login-hidden" style={{ position: 'fixed', left: '-9999px', opacity: 0, pointerEvents: 'none', zIndex: -1 }}>
-                <GoogleLogin
-                    onSuccess={handleGoogleLoginSuccess}
-                    onError={handleGoogleLoginError}
-                    useOneTap={false}
-                    theme="outline"
-                    size="large"
-                    text="signin_with"
-                    shape="rectangular"
-                    logo_alignment="left"
-                    locale="vi"
-                />
-            </div>
-        );
-    }
-
+    // --- RENDER ---
     return (
         <>
-            {/* GoogleLogin component luôn render (ẩn) để popup vẫn hoạt động */}
-            <div className="google-login-hidden" style={{ position: 'fixed', left: '-9999px', opacity: 0, pointerEvents: 'none', zIndex: -1 }}>
-                <GoogleLogin
-                    onSuccess={handleGoogleLoginSuccess}
-                    onError={handleGoogleLoginError}
-                    useOneTap={false}
-                    theme="outline"
-                    size="large"
-                    text="signin_with"
-                    shape="rectangular"
-                    logo_alignment="left"
-                    locale="vi"
-                />
+            {/* Google Hidden Button */}
+            <div id="google-login-wrapper-hidden" style={{ position: 'fixed', top: '-9999px', visibility: 'hidden' }}>
+                <GoogleLogin onSuccess={handleGoogleLoginSuccess} onError={() => { }} useOneTap={false} />
             </div>
 
-            {/* Chỉ hiển thị modal khi KHÔNG đang Google login */}
-            {!isGoogleLoggingIn && (
-                <div className="auth-modal-overlay" onClick={handleClose}>
-                    <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-                        {/* Header */}
+            {isOpen && (
+                <div className="auth-modal-overlay" onClick={onClose}>
+                    <div className="auth-modal" onClick={e => e.stopPropagation()}>
                         <div className="auth-modal-header">
-                            <h2 className="auth-modal-title">Chúng tôi có một ưu đãi vô cùng hấp dẫn!</h2>
-                            <button className="auth-modal-close" onClick={handleClose}>×</button>
+                            <h2 className="auth-modal-title">
+                                {view === 'main' ? 'Chào mừng bạn!' :
+                                    view === 'email-login' ? 'Đăng nhập' :
+                                        view === 'email-register' ? 'Đăng ký tài khoản' : 'Khôi phục mật khẩu'}
+                            </h2>
+                            <button className="auth-modal-close" onClick={onClose}>×</button>
                         </div>
 
-                        {/* Body */}
                         <div className="auth-modal-body">
-
+                            {/* VIEW: MAIN */}
                             {view === 'main' && (
                                 <>
-                                    {/* Google Login Button - Modern Design */}
                                     <div className="auth-btn-google-wrapper">
-                                        {/* Custom Google Button */}
-                                        <button
-                                            className="auth-btn-google-custom"
-                                            onClick={triggerGoogleLogin}
-                                            disabled={loading}
-                                            type="button"
-                                        >
+                                        <button className="auth-btn-google-custom" onClick={triggerGoogleLogin}>
                                             <div className="google-logo-container">
-                                                {/* Google Logo - Official Colors */}
-                                                <svg className="google-logo" viewBox="0 0 24 24" width="20" height="20">
-                                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                                                </svg>
+                                                <svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
                                                 <span className="google-text">Google</span>
                                             </div>
-                                            <span className="google-badge">Đã sử dụng gần đây</span>
                                         </button>
                                     </div>
-
-                                    {/* Email Login Button - Modern Design */}
-                                    <button
-                                        className="auth-btn-email-custom"
-                                        onClick={() => setView('email-login')}
-                                        disabled={loading}
-                                    >
-                                        <svg className="email-icon-custom" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
-                                        <span>Email</span>
+                                    <button className="auth-btn-email-custom" onClick={() => setView('email-login')}>
+                                        <span>Đăng nhập bằng Email</span>
                                     </button>
-
-                                    {/* Register with Email Link */}
                                     <div className="auth-links-section">
-                                        <a
-                                            href="#register"
-                                            className="auth-link-primary"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setView('email-register');
-                                            }}
-                                        >
-                                            Đăng ký bằng Email
-                                        </a>
+                                        <a href="#reg" className="auth-link-primary" onClick={e => { e.preventDefault(); setView('email-register'); }}>Đăng ký tài khoản mới</a>
                                     </div>
-
-                                    {/* Promotional Text */}
-                                    <p className="auth-promo-text">
-                                        Giá thấp hơn và nhiều phần thưởng đang chờ bạn. Mở khóa ưu đãi bằng cách đăng nhập!
-                                    </p>
-
-                                    {/* Terms & Privacy */}
-                                    <p className="auth-legal-text">
-                                        Bằng cách tiếp tục, bạn đồng ý với{' '}
-                                        <strong>
-                                            <a href="/chinh-sach/dieu-khoan" className="auth-link-inline">Điều khoản và Điều kiện</a>
-                                        </strong>
-                                        {' '}này và bạn đã được thông báo về{' '}
-                                        <strong>
-                                            <a href="/chinh-sach/bao-mat" className="auth-link-inline">Chính sách bảo vệ dữ liệu</a>
-                                        </strong>
-                                        {' '}của chúng tôi.
-                                    </p>
-
-                                    {/* Guest Mode */}
-                                    <a
-                                        href="#guest"
-                                        className="auth-guest-link"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            if (onGuestMode) onGuestMode();
-                                            onClose();
-                                        }}
-                                    >
-                                        Tìm kiếm với tư cách là khách
-                                    </a>
                                 </>
                             )}
 
-                            {/* Email Login Form */}
+                            {/* VIEW: LOGIN */}
                             {view === 'email-login' && (
                                 <form onSubmit={handleEmailLogin} className="auth-form">
-                                    <button type="button" className="auth-back-btn" onClick={resetView}>← Quay lại</button>
-                                    <h3>Đăng nhập bằng Email</h3>
-
-                                    {/* General error message */}
-                                    {errors.general && (
-                                        <div className="auth-message auth-message-error">
-                                            {errors.general}
-                                        </div>
-                                    )}
+                                    <button type="button" className="auth-back-btn" onClick={() => setView('main')}>← Quay lại</button>
+                                    {successMessage && <div className="auth-message auth-message-success">{successMessage}</div>}
+                                    {errors.general && <div className="auth-message auth-message-error">{errors.general}</div>}
 
                                     <div className="auth-form-group">
-                                        <label htmlFor="login-email">Email</label>
-                                        <input
-                                            id="login-email"
-                                            type="email"
-                                            placeholder="Email"
-                                            value={email}
-                                            onChange={(e) => {
-                                                setEmail(e.target.value);
-                                                clearFieldError('email');
-                                            }}
-                                            className={errors.email ? 'auth-input-error' : ''}
-                                            required
-                                        />
-                                        {errors.email && <div className="auth-field-error">{errors.email}</div>}
+                                        <label>Email</label>
+                                        <input type="email" value={email} onChange={e => { setEmail(e.target.value); clearFieldError('email'); }} required />
                                     </div>
-
                                     <div className="auth-form-group">
-                                        <label htmlFor="login-password">Mật khẩu</label>
-                                        <input
-                                            id="login-password"
-                                            type="password"
-                                            placeholder="Mật khẩu"
-                                            value={password}
-                                            onChange={(e) => {
-                                                setPassword(e.target.value);
-                                                clearFieldError('password');
-                                            }}
-                                            className={errors.password ? 'auth-input-error' : ''}
-                                            required
-                                        />
-                                        {errors.password && <div className="auth-field-error">{errors.password}</div>}
+                                        <label>Mật khẩu</label>
+                                        <input type="password" value={password} onChange={e => { setPassword(e.target.value); clearFieldError('password'); }} required />
                                     </div>
 
-                                    <button type="submit" className="auth-submit-btn" disabled={loading}>
-                                        {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-                                    </button>
-                                    <a href="#forgot" className="auth-link" onClick={(e) => {
-                                        e.preventDefault();
-                                        setView('forgot-password');
-                                    }}>Quên mật khẩu?</a>
+                                    <button className="auth-submit-btn" disabled={loading}>{loading ? 'Đang xử lý...' : 'Đăng nhập'}</button>
+                                    <a href="#forgot" className="auth-link" onClick={e => { e.preventDefault(); setView('forgot-password'); }}>Quên mật khẩu?</a>
                                 </form>
                             )}
 
-                            {/* Email Register Form - Email + Password + OTP */}
+                            {/* VIEW: REGISTER */}
                             {view === 'email-register' && (
-                                <form onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    if (!otpSent) {
-                                        // BƯỚC 1: GỬI OTP
-                                        clearErrors();
+                                <form onSubmit={handleRegisterProcess} className="auth-form">
+                                    <button type="button" className="auth-back-btn" onClick={() => { setView('main'); setOtpSent(false); }}>← Quay lại</button>
 
-                                        let hasError = false;
-                                        if (!name) {
-                                            setError('name', 'Vui lòng nhập tên đăng nhập');
-                                            hasError = true;
-                                        }
-                                        if (!email) {
-                                            setError('email', 'Vui lòng nhập email');
-                                            hasError = true;
-                                        }
-                                        if (!password) {
-                                            setError('password', 'Vui lòng nhập mật khẩu');
-                                            hasError = true;
-                                        }
-                                        if (password && password.length < 6) {
-                                            setError('password', 'Mật khẩu phải có ít nhất 6 ký tự');
-                                            hasError = true;
-                                        }
-                                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                                        if (email && !emailRegex.test(email)) {
-                                            setError('email', 'Email không hợp lệ');
-                                            hasError = true;
-                                        }
-                                        if (hasError) return;
-
-                                        setLoading(true);
-                                        try {
-                                            const response = await registerWithEmail(email, name, password);
-
-                                            if (response.success) {
-                                                setOtpSent(true);
-                                                setCountdown(60);
-                                                setSuccessMessage(response.message || 'Mã OTP đã được gửi đến email của bạn');
-
-                                                const timer = setInterval(() => {
-                                                    setCountdown((prev) => {
-                                                        if (prev <= 1) {
-                                                            clearInterval(timer);
-                                                            return 0;
-                                                        }
-                                                        return prev - 1;
-                                                    });
-                                                }, 1000);
-                                            } else {
-                                                setError('general', response.message || 'Không thể gửi OTP');
-                                            }
-                                        } catch (error) {
-                                            console.error('Register with email error:', error);
-                                            const errorMessage = error.response?.data?.message ||
-                                                error.message ||
-                                                'Không thể gửi OTP. Vui lòng thử lại.';
-                                            setError('general', errorMessage);
-                                        } finally {
-                                            setLoading(false);
-                                        }
-                                    } else {
-                                        // BƯỚC 2: VERIFY OTP VÀ ĐĂNG KÝ
-                                        clearErrors();
-
-                                        if (!otpCode || otpCode.length !== 6) {
-                                            setError('otpCode', 'Vui lòng nhập mã OTP 6 số');
-                                            return;
-                                        }
-
-                                        setLoading(true);
-                                        try {
-                                            const response = await verifyOTPAndRegister(email, otpCode, name, password);
-
-                                            if (response.message === 'Đăng ký thành công' && response.user) {
-                                                const meResponse = await getMe();
-
-                                                if (meResponse.success && meResponse.user) {
-                                                    dispatch(userLoginSuccess({
-                                                        user: meResponse.user,
-                                                        token: null // Token is in HttpOnly cookie
-                                                    }));
-                                                    // Reset view về main trước khi đóng modal
-                                                    resetView();
-                                                    onClose();
-                                                    navigate('/');
-                                                } else {
-                                                    setError('general', 'Đăng ký thành công nhưng không thể lấy thông tin người dùng.');
-                                                }
-                                            } else {
-                                                setError('general', response.message || 'Đăng ký thất bại');
-                                            }
-                                        } catch (error) {
-                                            console.error('Verify OTP and register error:', error);
-                                            const errorMessage = error.response?.data?.message ||
-                                                error.message ||
-                                                'Mã OTP không đúng hoặc đã hết hạn';
-                                            setError('otpCode', errorMessage);
-                                        } finally {
-                                            setLoading(false);
-                                        }
-                                    }
-                                }} className="auth-form">
-                                    <button type="button" className="auth-back-btn" onClick={() => {
-                                        resetView();
-                                        setCountdown(0);
-                                    }}>← Quay lại các lựa chọn</button>
-                                    <h3>Tạo tài khoản</h3>
-
-                                    {/* Success message */}
-                                    {successMessage && (
-                                        <div className="auth-message auth-message-success">
-                                            {successMessage}
-                                        </div>
-                                    )}
-
-                                    {/* General error message */}
-                                    {errors.general && (
-                                        <div className="auth-message auth-message-error">
-                                            {errors.general}
-                                        </div>
-                                    )}
+                                    {successMessage && <div className="auth-message auth-message-success">{successMessage}</div>}
+                                    {errors.general && <div className="auth-message auth-message-error">{errors.general}</div>}
 
                                     {!otpSent ? (
                                         <>
                                             <div className="auth-form-group">
-                                                <label htmlFor="register-name">Tên đăng nhập</label>
-                                                <input
-                                                    id="register-name"
-                                                    type="text"
-                                                    placeholder="Nhập tên đăng nhập"
-                                                    value={name}
-                                                    onChange={(e) => {
-                                                        setName(e.target.value);
-                                                        clearFieldError('name');
-                                                    }}
-                                                    className={errors.name ? 'auth-input-error' : ''}
-                                                    required
-                                                />
-                                                {errors.name && <div className="auth-field-error">{errors.name}</div>}
+                                                <label>Tên hiển thị</label>
+                                                <input type="text" value={name} onChange={e => { setName(e.target.value); clearFieldError('name'); }} required />
                                             </div>
-
                                             <div className="auth-form-group">
-                                                <label htmlFor="register-email">Email</label>
-                                                <input
-                                                    id="register-email"
-                                                    type="email"
-                                                    placeholder="Nhập email"
-                                                    value={email}
-                                                    onChange={(e) => {
-                                                        setEmail(e.target.value);
-                                                        clearFieldError('email');
-                                                    }}
-                                                    className={errors.email ? 'auth-input-error' : ''}
-                                                    required
-                                                />
-                                                {errors.email && <div className="auth-field-error">{errors.email}</div>}
+                                                <label>Email</label>
+                                                <input type="email" value={email} onChange={e => { setEmail(e.target.value); clearFieldError('email'); }} required />
                                             </div>
-
                                             <div className="auth-form-group">
-                                                <label htmlFor="register-password">Mật khẩu</label>
+                                                <label>Mật khẩu</label>
                                                 <div style={{ position: 'relative' }}>
-                                                    <input
-                                                        id="register-password"
-                                                        type={showPassword ? 'text' : 'password'}
-                                                        placeholder="Nhập mật khẩu của bạn"
-                                                        value={password}
-                                                        onChange={(e) => {
-                                                            setPassword(e.target.value);
-                                                            clearFieldError('password');
-                                                        }}
-                                                        className={errors.password ? 'auth-input-error' : ''}
-                                                        required
-                                                    />
-                                                    <span
-                                                        className="password-toggle"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            right: '12px',
-                                                            top: '50%',
-                                                            transform: 'translateY(-50%)',
-                                                            cursor: 'pointer',
-                                                            color: '#999'
-                                                        }}
-                                                    >
-                                                        <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                                                    </span>
+                                                    <input type={showPassword ? "text" : "password"} value={password} onChange={e => { setPassword(e.target.value); clearFieldError('password'); }} required />
+                                                    <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}
+                                                        style={{ position: 'absolute', right: 10, top: 12, cursor: 'pointer', color: '#999' }}
+                                                        onClick={() => setShowPassword(!showPassword)}></i>
                                                 </div>
                                                 {errors.password && <div className="auth-field-error">{errors.password}</div>}
                                             </div>
-
-                                            <button type="submit" className="auth-submit-btn" disabled={loading}>
-                                                {loading ? 'Đang gửi mã OTP...' : 'Đăng ký'}
-                                            </button>
+                                            <button className="auth-submit-btn" disabled={loading}>{loading ? 'Đang gửi...' : 'Đăng ký'}</button>
                                         </>
                                     ) : (
                                         <>
-                                            <p style={{ color: '#666', marginBottom: '20px', textAlign: 'center' }}>
-                                                Mã OTP đã được gửi đến email <strong>{email}</strong>
-                                            </p>
-
+                                            <p className="text-center text-muted">OTP đã gửi đến <strong>{email}</strong></p>
                                             <div className="auth-form-group">
-                                                <label htmlFor="register-otp">
-                                                    Mã OTP
-                                                    {countdown > 0 && (
-                                                        <span style={{
-                                                            marginLeft: '8px',
-                                                            color: '#667eea',
-                                                            fontWeight: '600',
-                                                            fontSize: '14px'
-                                                        }}>
-                                                            (Còn lại: {countdown}s)
-                                                        </span>
-                                                    )}
-                                                </label>
-                                                <input
-                                                    id="register-otp"
-                                                    type="text"
-                                                    placeholder="Nhập mã OTP 6 số"
-                                                    value={otpCode}
-                                                    onChange={(e) => {
-                                                        setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6));
-                                                        clearFieldError('otpCode');
-                                                    }}
-                                                    className={errors.otpCode ? 'auth-input-error' : ''}
-                                                    maxLength={6}
-                                                    required
-                                                    style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '8px' }}
-                                                />
+                                                <label>Mã OTP {countdown > 0 && `(${countdown}s)`}</label>
+                                                <input value={otpCode} onChange={e => setOtpCode(e.target.value)} style={{ textAlign: 'center', letterSpacing: '4px' }} maxLength={6} />
                                                 {errors.otpCode && <div className="auth-field-error">{errors.otpCode}</div>}
                                             </div>
-
-                                            <button type="submit" className="auth-submit-btn" disabled={loading || !otpCode}>
-                                                {loading ? 'Đang xác thực...' : 'Xác thực và Đăng ký'}
-                                            </button>
-
-                                            <div style={{ textAlign: 'center', marginTop: '16px' }}>
-                                                {countdown > 0 ? (
-                                                    <span style={{ color: '#999', fontSize: '14px' }}>
-                                                        Gửi lại mã sau {countdown}s
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        className="auth-link"
-                                                        onClick={async () => {
-                                                            // Gửi lại OTP với thông tin đã nhập
-                                                            clearErrors();
-
-                                                            let hasError = false;
-                                                            if (!name || !email || !password) {
-                                                                setError('general', 'Vui lòng nhập đầy đủ thông tin');
-                                                                hasError = true;
-                                                            }
-                                                            if (password && password.length < 6) {
-                                                                setError('password', 'Mật khẩu phải có ít nhất 6 ký tự');
-                                                                hasError = true;
-                                                            }
-                                                            if (hasError) return;
-
-                                                            setLoading(true);
-                                                            try {
-                                                                const response = await registerWithEmail(email, name, password);
-                                                                if (response.success) {
-                                                                    setCountdown(60);
-                                                                    setSuccessMessage(response.message || 'Mã OTP đã được gửi lại');
-                                                                    const timer = setInterval(() => {
-                                                                        setCountdown((prev) => {
-                                                                            if (prev <= 1) {
-                                                                                clearInterval(timer);
-                                                                                return 0;
-                                                                            }
-                                                                            return prev - 1;
-                                                                        });
-                                                                    }, 1000);
-                                                                } else {
-                                                                    setError('general', response.message || 'Không thể gửi lại OTP');
-                                                                }
-                                                            } catch (error) {
-                                                                setError('general', error.response?.data?.message || 'Không thể gửi lại OTP');
-                                                            } finally {
-                                                                setLoading(false);
-                                                            }
-                                                        }}
-                                                        style={{ background: 'none', border: 'none', padding: 0 }}
-                                                        disabled={loading}
-                                                    >
-                                                        Gửi lại mã OTP
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <button className="auth-submit-btn" disabled={loading}>Xác thực & Hoàn tất</button>
+                                            {countdown === 0 && <span className="auth-link text-center d-block mt-2" onClick={() => { setOtpSent(false); }}>Gửi lại mã?</span>}
                                         </>
                                     )}
-
-                                    <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #e0e0e0' }}>
-                                        <span style={{ color: '#666' }}>Đã có tài khoản? </span>
-                                        <a
-                                            href="#login"
-                                            className="auth-link-inline"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                resetView();
-                                                setView('email-login');
-                                            }}
-                                        >
-                                            Đăng nhập
-                                        </a>
-                                    </div>
                                 </form>
                             )}
 
-                            {/* Forgot Password */}
+                            {/* VIEW: FORGOT PASSWORD */}
                             {view === 'forgot-password' && (
                                 <div className="auth-form">
                                     <button type="button" className="auth-back-btn" onClick={() => setView('email-login')}>← Quay lại</button>
-                                    <h3>Đặt lại mật khẩu</h3>
 
-                                    {/* Success message */}
-                                    {successMessage && (
-                                        <div className="auth-message auth-message-success">
-                                            {successMessage}
-                                        </div>
-                                    )}
-
-                                    {/* General error message */}
-                                    {errors.general && (
-                                        <div className="auth-message auth-message-error">
-                                            {errors.general}
-                                        </div>
-                                    )}
-
-                                    <div className="auth-form-group">
-                                        <label htmlFor="forgot-email">Email</label>
-                                        <input
-                                            id="forgot-email"
-                                            type="email"
-                                            placeholder="Email"
-                                            value={email}
-                                            onChange={(e) => {
-                                                setEmail(e.target.value);
-                                                clearFieldError('email');
-                                            }}
-                                            className={errors.email ? 'auth-input-error' : ''}
-                                            disabled={otpSent}
-                                        />
-                                        {errors.email && <div className="auth-field-error">{errors.email}</div>}
-                                    </div>
+                                    {successMessage && <div className="auth-message auth-message-success">{successMessage}</div>}
+                                    {errors.general && <div className="auth-message auth-message-error">{errors.general}</div>}
 
                                     {!otpSent ? (
-                                        <button
-                                            type="button"
-                                            className="auth-submit-btn"
-                                            onClick={() => handleSendOTP('reset-password')}
-                                            disabled={loading}
-                                        >
-                                            {loading ? 'Đang gửi...' : 'Gửi mã OTP'}
-                                        </button>
+                                        <>
+                                            <div className="auth-form-group">
+                                                <label>Nhập Email của bạn</label>
+                                                <input type="email" value={email} onChange={e => setEmail(e.target.value)} />
+                                            </div>
+                                            <button className="auth-submit-btn" onClick={handleForgotSendOTP} disabled={loading}>{loading ? 'Đang gửi...' : 'Gửi mã OTP'}</button>
+                                        </>
                                     ) : (
                                         <>
                                             <div className="auth-form-group">
-                                                <label>
-                                                    Mã OTP
-                                                    {countdown > 0 && (
-                                                        <span style={{
-                                                            marginLeft: '8px',
-                                                            color: '#667eea',
-                                                            fontWeight: '600',
-                                                            fontSize: '14px'
-                                                        }}>
-                                                            (Còn lại: {countdown}s)
-                                                        </span>
-                                                    )}
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Nhập mã OTP 6 số"
-                                                    value={otpCode}
-                                                    onChange={(e) => {
-                                                        setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6));
-                                                        clearFieldError('otpCode');
-                                                    }}
-                                                    className={errors.otpCode ? 'auth-input-error' : ''}
-                                                    maxLength={6}
-                                                    style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '8px' }}
-                                                />
-                                                {errors.otpCode && <div className="auth-field-error">{errors.otpCode}</div>}
+                                                <label>Mã OTP</label>
+                                                <input value={otpCode} onChange={e => setOtpCode(e.target.value)} maxLength={6} style={{ textAlign: 'center' }} />
                                             </div>
-
                                             <div className="auth-form-group">
-                                                <label htmlFor="forgot-password">Mật khẩu mới</label>
-                                                <input
-                                                    id="forgot-password"
-                                                    type="password"
-                                                    placeholder="Mật khẩu mới"
-                                                    value={password}
-                                                    onChange={(e) => {
-                                                        setPassword(e.target.value);
-                                                        clearFieldError('password');
-                                                    }}
-                                                    className={errors.password ? 'auth-input-error' : ''}
-                                                />
-                                                {errors.password && <div className="auth-field-error">{errors.password}</div>}
+                                                <label>Mật khẩu mới</label>
+                                                <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
                                             </div>
-
-                                            <button
-                                                type="button"
-                                                className="auth-submit-btn"
-                                                onClick={async () => {
-                                                    setLoading(true);
-                                                    clearErrors();
-                                                    try {
-                                                        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/reset-password`, {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ email, otpCode, newPassword: password })
-                                                        });
-                                                        const data = await response.json();
-                                                        if (response.ok) {
-                                                            setSuccessMessage('Đặt lại mật khẩu thành công!');
-                                                            setTimeout(() => {
-                                                                setView('email-login');
-                                                                clearErrors();
-                                                            }, 1500);
-                                                        } else {
-                                                            setError('general', data.message || 'Đặt lại mật khẩu thất bại');
-                                                        }
-                                                    } catch (error) {
-                                                        setError('general', 'Đặt lại mật khẩu thất bại');
-                                                    } finally {
-                                                        setLoading(false);
-                                                    }
-                                                }}
-                                                disabled={loading}
-                                            >
-                                                {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
-                                            </button>
-
-                                            <div style={{ textAlign: 'center', marginTop: '16px' }}>
-                                                {countdown > 0 ? (
-                                                    <span style={{ color: '#999', fontSize: '14px' }}>
-                                                        Gửi lại mã sau {countdown}s
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        className="auth-link"
-                                                        onClick={() => {
-                                                            setOtpSent(false);
-                                                            setOtpCode('');
-                                                            clearErrors();
-                                                        }}
-                                                        style={{ background: 'none', border: 'none', padding: 0 }}
-                                                    >
-                                                        Gửi lại mã OTP
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <button className="auth-submit-btn" onClick={handleResetPassword} disabled={loading}>{loading ? 'Đang xử lý...' : 'Đổi mật khẩu'}</button>
                                         </>
                                     )}
                                 </div>
                             )}
+
                         </div>
                     </div>
                 </div>
@@ -968,4 +434,3 @@ const AuthModal = ({ isOpen, onClose, onGuestMode }) => {
 };
 
 export default AuthModal;
-
