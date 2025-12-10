@@ -21,21 +21,15 @@ API.interceptors.request.use(
         return Promise.reject(error);
     }
 );
-// check toekn and logout when token end date
 API.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            // Chỉ redirect nếu:
-            // 1. Không phải là request từ /api/me (vì /api/me có thể fail khi user chưa login - đó là bình thường)
-            // 2. Không phải đang ở trang public (home, products, etc.)
+
             const requestUrl = error.config?.url || '';
             const path = window.location.pathname;
 
-            // Không redirect nếu:
-            // - Request là /api/me (AuthChecker sẽ xử lý)
-            // - Đang ở trang public (home, products, news, etc.)
-            // - Đang ở trang login/register (tránh loop)
+
             const isPublicPath = path === '/' ||
                 path.startsWith('/products') ||
                 path.startsWith('/news') ||
@@ -60,39 +54,7 @@ API.interceptors.response.use(
     }
 );
 
-// ============ LƯU Ý: TẤT CẢ API AUTHENTICATION ĐÃ CHUYỂN SANG authService.js ============
-// 
-// ✅ TẤT CẢ API AUTH ĐƯỢC TẬP TRUNG TẠI: src/container/services/authService.js
-// 
-// 📋 Danh sách API auth (import từ authService.js):
-// 
-// LOGIN:
-//   - handleLoginApi(email, password)
-//   - loginWithGoogleToken(id_token)
-//   - loginWithGoogle(googleData) [OLD]
-//   - loginWithOTP(email, otpCode)
-// 
-// REGISTER:
-//   - registerWithEmail(email, name, password)
-//   - verifyOTPAndRegister(email, code, name, password)
-//   - registerWithOTP(name, email, otpCode) [OLD]
-//   - handleRegisterApi(formData) [OLD]
-// 
-// OTP:
-//   - sendOTP(email, type)
-// 
-// USER INFO:
-//   - getMe() - Lấy thông tin user hiện tại
-// 
-// LOGOUT:
-//   - logout()
-// 
-// FORGOT PASSWORD:
-//   - checkEmailExist(email)
-//   - updatePasswordUser(email, newPassword)
-// 
-// ============ FILE NÀY CHỈ CHỨA API KHÔNG LIÊN QUAN ĐẾN AUTH ============
-// image
+
 export const uploadAvatar = (formData) => {
     return API.post('/upload-avatar', formData, {
         headers: {

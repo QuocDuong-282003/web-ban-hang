@@ -12,13 +12,11 @@ const API = axios.create({
 
 API.interceptors.request.use(
     (config) => {
-        // Chỉ gửi Authorization header nếu có token trong localStorage
-        // Nếu backend dùng HttpOnly cookie, token sẽ null và backend sẽ đọc từ cookie
+
         const token = localStorage.getItem('token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
-        // withCredentials: true đã được set ở axios.create, nên cookie sẽ tự động gửi kèm
         return config;
     },
     (error) => Promise.reject(error)
@@ -27,6 +25,20 @@ API.interceptors.request.use(
 // ============ LOGIN ============
 export const handleLoginApi = (email, password) => {
     return API.post('/login', { email, password });
+};
+
+// Login riêng cho admin - có thể bypass verify email check
+// Backend nên có endpoint riêng hoặc tự động bypass verify cho admin role
+export const handleAdminLoginApi = async (email, password) => {
+    try {
+        // Thử dùng API login thông thường trước
+        const response = await API.post('/login', { email, password });
+        return response;
+    } catch (error) {
+        // Nếu lỗi là về verify email, có thể thử endpoint riêng cho admin
+        // Hoặc backend cần sửa để bypass verify cho admin
+        throw error;
+    }
 };
 
 export const loginWithGoogleToken = async (id_token) => {

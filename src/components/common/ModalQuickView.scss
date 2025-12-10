@@ -6,11 +6,13 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1050;
+    z-index: 10001;
     padding: 15px;
+    pointer-events: auto;
 }
 
 .quickview-modal-dialog {
@@ -21,6 +23,8 @@
     position: relative;
     box-shadow: 0 5px 15px rgba(0,0,0,.5);
     animation: fadeIn 0.3s ease-out;
+    pointer-events: auto;
+    z-index: 10002;
 }
 
 @keyframes fadeIn {
@@ -41,6 +45,7 @@
     border-radius: 50%;
     background-color: #fff;
     border: none;
+    outline: none;
     font-size: 24px;
     line-height: 36px;
     text-align: center;
@@ -48,16 +53,29 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     transition: transform 0.2s, background-color 0.2s;
     color: #333;
+    z-index: 10003;
+    pointer-events: auto;
 
     &:hover {
         transform: scale(1.1);
         background-color: #f0f0f0;
+    }
+
+    &:focus {
+        outline: none;
+        border: none;
+    }
+
+    &:active {
+        outline: none;
+        border: none;
     }
 }
 
 .quickview-modal-body {
     display: flex;
     gap: 30px;
+    pointer-events: auto;
 
     @media (max-width: 768px) {
         flex-direction: column;
@@ -105,6 +123,7 @@
     cursor: pointer;
     transition: border-color 0.2s;
     overflow: hidden;
+    pointer-events: auto;
 
     img {
         width: 100%;
@@ -238,24 +257,35 @@
         border: 1px solid #ccc;
         border-radius: 4px;
         overflow: hidden;
+        pointer-events: auto;
 
         button, input {
             border: none;
             background-color: #fff;
             height: 40px;
             text-align: center;
+            pointer-events: auto;
         }
         button {
             width: 40px;
             cursor: pointer;
             font-size: 20px;
+            outline: none;
             &:hover { background-color: #f0f0f0; }
+            &:focus {
+                outline: none;
+                border: none;
+            }
         }
         input {
             width: 50px;
             font-size: 16px;
             border-left: 1px solid #ccc;
             border-right: 1px solid #ccc;
+            pointer-events: auto;
+            &:focus {
+                outline: none;
+            }
         }
     }
 }
@@ -264,6 +294,7 @@
     flex-grow: 1;
     height: 44px;
     border: none;
+    outline: none;
     background-color: #000;
     color: #fff;
     font-size: 16px;
@@ -271,9 +302,18 @@
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.2s;
+    pointer-events: auto;
 
     &:hover {
         background-color: #333;
+    }
+    &:focus {
+        outline: none;
+        border: none;
+    }
+    &:active {
+        outline: none;
+        border: none;
     }
     &:disabled {
         background-color: #ccc;

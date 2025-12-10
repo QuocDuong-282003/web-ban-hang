@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-//import './GoToTop.css'; // Tạo file CSS riêng nếu cần
+import './GoToTop.scss';
 
 function GoToTop() {
     const [isVisible, setIsVisible] = useState(false);

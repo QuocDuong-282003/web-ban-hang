@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { handleLoginApi } from '../services/authService';
+import { handleAdminLoginApi } from '../services/authService';
 import { trackLogin } from '../services/userService';
 import { adminLoginSuccess } from '../redux/authSlice';
 //const jwt = require('jsonwebtoken');
@@ -18,7 +18,6 @@ const LoginSystemPage = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
-    // const handleSubmit = async (e) => {
     //     e.preventDefault();
     //     setError('');
 
@@ -42,31 +41,44 @@ const LoginSystemPage = () => {
         setError('');
 
         try {
-
-            const res = await handleLoginApi(form.email, form.password);
-
+            const res = await handleAdminLoginApi(form.email, form.password);
 
             // Dùng destructuring để lấy ra cả user và token từ res.data
             const { user, token } = res.data;
+
+            // Kiểm tra role admin
             if (!user || user.role !== 'admin') {
                 return setError('Chỉ tài khoản admin mới có quyền truy cập');
             }
 
-            //  Lưu chuỗi token vào localStorage với key là "token"
+            // Admin không cần verify email - backend nên tự động bypass verify cho admin
+            // Nếu backend vẫn yêu cầu verify, cần sửa backend để bypass check verified cho admin role
+
+            // Lưu token vào localStorage
             localStorage.setItem('token', token);
 
-
-            //  dispatch(loginSuccess(user));
+            // Dispatch action để lưu vào Redux
             dispatch(adminLoginSuccess({ user, token }));
             localStorage.setItem('authUser', JSON.stringify(user));
+
+            // Track login
             await trackLogin(user.role);
 
-            // 7. Chuyển hướng
+            // Chuyển hướng
             navigate(from);
 
         } catch (err) {
-            const msg = err.response?.data?.message || 'Email hoặc mật khẩu không đúng.';
-            setError(msg);
+            // Xử lý lỗi từ backend
+            const errorMessage = err.response?.data?.message || err.response?.data?.msg || 'Email hoặc mật khẩu không đúng.';
+
+            // Nếu lỗi là về email chưa verify, đây là vấn đề backend
+            // Backend cần sửa để bypass verify check cho admin role
+            if (errorMessage.includes('xác thực') || errorMessage.includes('verify') || errorMessage.includes('verified')) {
+                setError('Lỗi: Tài khoản admin chưa được xác thực email. Vui lòng kiểm tra backend - admin không cần verify email.');
+                console.error('Backend đang yêu cầu verify email cho admin. Cần sửa backend để bypass verify check cho admin role.');
+            } else {
+                setError(errorMessage);
+            }
         }
     };
 

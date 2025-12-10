@@ -1,0 +1,107 @@
+// ============================================
+// MODERN GO TO TOP BUTTON STYLES
+// ============================================
+
+#go-to-top {
+    position: fixed;
+    bottom: 48px; // Xích lên 2cm (24px = 1cm, 48px = 2cm)
+    left: 24px; // Đặt bên trái để tránh conflict với ChatBubble (bên phải)
+    z-index: 9997; // Thấp hơn ChatBubble (9999) một chút
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.btn-gototop {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    outline: none;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s;
+    }
+
+    i {
+        position: relative;
+        z-index: 1;
+        transition: transform 0.3s;
+    }
+
+    &:hover {
+        transform: translateY(-4px) scale(1.05);
+        box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+        
+        &::before {
+            left: 100%;
+        }
+
+        i {
+            transform: translateY(-2px);
+        }
+    }
+
+    &:active {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    &:focus {
+        outline: none;
+        border: none;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    &:active {
+        outline: none;
+        border: none;
+    }
+}
+
+// ============================================
+// RESPONSIVE
+// ============================================
+
+@media (max-width: 480px) {
+    #go-to-top {
+        bottom: 16px;
+        left: 16px;
+    }
+
+    .btn-gototop {
+        width: 52px;
+        height: 52px;
+        font-size: 18px;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+}
+

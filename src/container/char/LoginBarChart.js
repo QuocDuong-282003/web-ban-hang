@@ -9,45 +9,70 @@ const LoginBarChart = () => {
     const [data, setData] = useState(null);
 
     useEffect(() => {
-        fetchMonthStats().then((res) => {
-            const raw = res.data;
+        fetchMonthStats()
+            .then((res) => {
+                const raw = res?.data;
 
-            const grouped = {};
+                // Validate data
+                if (!raw || !Array.isArray(raw) || raw.length === 0) {
+                    console.warn('LoginBarChart: Không có dữ liệu hoặc dữ liệu không đúng định dạng');
+                    setData(null);
+                    return;
+                }
 
-            raw.forEach((item) => {
-                const day = new Date(item.date).getDate();
-                if (!grouped[day]) grouped[day] = { admin: 0, user: 0 };
-                grouped[day][item.type] += item.count;
-            });
+                const grouped = {};
 
-            const labels = Object.keys(grouped).map(d => `Ngày ${d}`);
-            const adminData = Object.values(grouped).map(d => d.admin);
-            const userData = Object.values(grouped).map(d => d.user);
-
-            setData({
-                labels,
-                datasets: [
-                    {
-                        label: 'Admin',
-                        data: adminData,
-                        backgroundColor: '#36A2EB',
-                    },
-                    {
-                        label: 'User',
-                        data: userData,
-                        backgroundColor: '#FF6384',
+                raw.forEach((item) => {
+                    if (item && item.date && item.type && typeof item.count === 'number') {
+                        const day = new Date(item.date).getDate();
+                        if (!grouped[day]) grouped[day] = { admin: 0, user: 0 };
+                        grouped[day][item.type] += item.count;
                     }
-                ]
+                });
+
+                const labels = Object.keys(grouped).map(d => `Ngày ${d}`);
+                const adminData = Object.values(grouped).map(d => d.admin || 0);
+                const userData = Object.values(grouped).map(d => d.user || 0);
+
+                if (labels.length === 0) {
+                    setData(null);
+                    return;
+                }
+
+                setData({
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Admin',
+                            data: adminData,
+                            backgroundColor: '#36A2EB',
+                        },
+                        {
+                            label: 'User',
+                            data: userData,
+                            backgroundColor: '#FF6384',
+                        }
+                    ]
+                });
+            })
+            .catch((error) => {
+                console.error('LoginBarChart: Lỗi tải dữ liệu', error);
+                setData(null);
             });
-        });
     }, []);
 
-    if (!data) return <p>Đang tải biểu đồ Bar...</p>;
+    if (!data || !data.labels || !data.datasets) {
+        return <p>Đang tải biểu đồ Bar...</p>;
+    }
 
     return (
-        <div style={{ width: '100%', maxWidth: 500 }}>
+        <div style={{ width: '100%', maxWidth: '100%' }}>
             <h4>Thống kê đăng nhập theo ngày trong tháng</h4>
-            <Bar data={data} />
+            {data.labels.length > 0 && data.datasets.length > 0 ? (
+                <Bar data={data} />
+            ) : (
+                <p>Không có dữ liệu để hiển thị.</p>
+            )}
         </div>
     );
 };

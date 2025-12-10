@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { userLoginSuccess, userLogout } from './container/redux/userAuthSlice';
 import { getMe } from './container/services/authService';
@@ -46,15 +46,7 @@ import ForgotPasswordPage from './container/Login/ForgotPasswordPage';
 import RegisterSystemPage from './container/Login/RegisterSystemPage';
 import ChatBubble from './ChatAi/ChatBubble';
 
-/**
- * AuthChecker Component
- * Checks if user is authenticated via HttpOnly cookie when app loads
- * This component runs once on mount and attempts to get user info from /api/me
- * 
- * Lưu ý: Chỉ check khi:
- * 1. Chưa có user trong Redux
- * 2. Không có user trong localStorage (tránh check lại sau khi logout)
- */
+
 function AuthChecker() {
     const dispatch = useDispatch();
     const { isAuthenticated, user } = useSelector(state => state.userAuth);
@@ -62,15 +54,11 @@ function AuthChecker() {
     useEffect(() => {
         let isMounted = true; // Flag to prevent state updates on unmounted component
 
-        // Kiểm tra localStorage để biết user đã logout chưa
-        // Nếu localStorage không có user, có nghĩa là đã logout → không check cookie
+
         const userFromStorage = localStorage.getItem('user');
         const tokenFromStorage = localStorage.getItem('token');
 
-        // Chỉ check nếu:
-        // 1. Chưa có user trong Redux
-        // 2. Có user hoặc token trong localStorage (chưa logout)
-        // Nếu không có cả 2, có nghĩa là đã logout → không check cookie
+
         if ((!isAuthenticated || !user) && (userFromStorage || tokenFromStorage)) {
             const checkAuth = async () => {
                 try {
@@ -110,10 +98,15 @@ function AuthChecker() {
     return null; // This component doesn't render anything
 }
 
-function App() {
+function AppContent() {
+    const location = useLocation();
+    const isAdminRoute = location.pathname.startsWith('/system') &&
+        location.pathname !== '/system/login' &&
+        location.pathname !== '/system/forgot-password' &&
+        location.pathname !== '/system/register';
+
     return (
-        <Router>
-            <AuthChecker />
+        <>
             <Routes>
                 {/* Public Routes */}
                 <Route path={path.HOME} element={<HomePage />} />
@@ -176,9 +169,17 @@ function App() {
                 pauseOnHover
 
             />
-            <ChatBubble />
-        </Router>
+            {!isAdminRoute && <ChatBubble />}
+        </>
+    );
+}
 
+function App() {
+    return (
+        <Router>
+            <AuthChecker />
+            <AppContent />
+        </Router>
     );
 }
 

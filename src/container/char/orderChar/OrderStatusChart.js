@@ -45,7 +45,11 @@ const OrderStatusChart = () => {
     // --- . MEMOIZED DATA PROCESSING ---
 
     const chartData = useMemo(() => {
-        if (!apiData?.labels) {
+        if (!apiData?.labels || !Array.isArray(apiData.labels)) {
+            return null;
+        }
+
+        if (!apiData?.datasets || !Array.isArray(apiData.datasets) || apiData.datasets.length === 0) {
             return null;
         }
 
@@ -56,10 +60,16 @@ const OrderStatusChart = () => {
         apiData.labels.forEach((label, index) => {
             if (selection[label]) { // Chỉ thêm vào nếu được chọn
                 filteredLabels.push(label);
-                filteredDataPoints.push(apiData.datasets?.[0]?.data?.[index] || 0);
-                filteredColors.push(apiData.datasets?.[0]?.backgroundColor?.[index] || '#cccccc');
+                const dataValue = apiData.datasets[0]?.data?.[index] ?? 0;
+                filteredDataPoints.push(dataValue);
+                const bgColor = apiData.datasets[0]?.backgroundColor?.[index] || '#cccccc';
+                filteredColors.push(bgColor);
             }
         });
+
+        if (filteredLabels.length === 0) {
+            return null;
+        }
 
         return {
             labels: filteredLabels,
@@ -67,7 +77,12 @@ const OrderStatusChart = () => {
                 ...apiData.datasets[0],
                 data: filteredDataPoints,
                 backgroundColor: filteredColors,
-                borderColor: filteredColors.map(color => color.replace('0.8', '1')),
+                borderColor: filteredColors.map(color => {
+                    if (typeof color === 'string') {
+                        return color.replace('0.8', '1');
+                    }
+                    return color;
+                }),
                 borderWidth: 1,
             }]
         };
