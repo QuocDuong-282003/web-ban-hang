@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SalesChart from '../char/orderChar/SalesChart';
 import OrderStatusChart from '../char/orderChar/OrderStatusChart';
+import TopOrdersChart from '../char/orderChar/TopOrdersChart';
 import LoginBarChart from '../char/LoginBarChart';
 import LoginPieChart from '../char/LoginPieChart';
 import {
@@ -11,7 +12,8 @@ import {
     getMonthlyComparison,
     getQuarterlyComparison,
     getQuarterlyStats,
-    getMonthlyPerformance
+    getMonthlyPerformance,
+    getSalesByFilter
 } from '../services/dashboardService';
 import './Dashboard.scss';
 
@@ -46,10 +48,15 @@ const Dashboard = () => {
     const [monthlyPerf, setMonthlyPerf] = useState(null);
     const [loading, setLoading] = useState(true);
     const [currentDate] = useState(new Date());
+    const [activeTab, setActiveTab] = useState('revenue'); // revenue, orders, popular-orders, financial
 
-    // Calculate previous period dates when fromDate/toDate change
+    // New state for API response
+    const [salesData, setSalesData] = useState(null); // { currentPeriod, previousPeriod, summary, detailedChangeRates }
+
+    // Calculate previous period dates when fromDate/toDate change (for custom filter only)
+    // Note: API tự động tính kỳ trước cho month/quarter/year, không cần tính thủ công
     useEffect(() => {
-        if (compareWithPrevious && fromDate && toDate) {
+        if (compareWithPrevious && filterBy === 'custom' && fromDate && toDate) {
             const from = new Date(fromDate);
             const to = new Date(toDate);
             const diffTime = to - from;
@@ -63,104 +70,122 @@ const Dashboard = () => {
 
             setFromDatePrevious(prevFrom.toISOString().split('T')[0]);
             setToDatePrevious(prevTo.toISOString().split('T')[0]);
+        } else {
+            // Clear previous dates for non-custom filters (API will auto-calculate)
+            setFromDatePrevious('');
+            setToDatePrevious('');
         }
-    }, [fromDate, toDate, compareWithPrevious]);
+    }, [fromDate, toDate, compareWithPrevious, filterBy]);
 
-    // Fetch all dashboard data
+    // Fetch all dashboard data using new API
     useEffect(() => {
         const fetchAllData = async () => {
             setLoading(true);
             try {
-                // Determine period based on filterBy
-                const period = filterBy === 'month' ? 'month' : filterBy === 'quarter' ? 'quarter' : filterBy === 'year' ? 'year' : 'custom';
+                // Build params for new API: /api/stats/sales-by-filter
+                // Khi filterBy='year' và compareWithPrevious=true, groupBy sẽ là 'month' để so sánh theo tháng
+                let effectiveGroupBy = groupBy;
+                if (filterBy === 'year' && compareWithPrevious) {
+                    effectiveGroupBy = 'month'; // So sánh năm theo tháng
+                } else if (filterBy === 'year' && !compareWithPrevious) {
+                    effectiveGroupBy = 'month'; // Hiển thị năm theo tháng
+                } else if (filterBy === 'quarter' && compareWithPrevious) {
+                    effectiveGroupBy = 'month'; // So sánh quý theo tháng
+                }
 
-                // Build API params based on filter
-                const apiParams = {};
+                const apiParams = {
+                    filterType: filterBy === 'custom' ? 'custom' : filterBy,
+                    groupBy: effectiveGroupBy
+                };
+
+                // Add filter-specific params
                 if (filterBy === 'custom') {
                     apiParams.fromDate = fromDate;
                     apiParams.toDate = toDate;
                 } else if (filterBy === 'month') {
                     apiParams.month = selectedMonth;
                     apiParams.year = selectedYear;
+                } else if (filterBy === 'quarter') {
+                    apiParams.year = selectedYear;
                 } else if (filterBy === 'year') {
                     apiParams.year = selectedYear;
                 }
 
-                // Fetch data based on filterBy - chỉ fetch khi có params hợp lệ
-                const promises = [];
-
-                // Overview stats - luôn fetch (không filter theo năm)
-                promises.push(getOverviewStats().catch(e => ({ data: null })));
-
-                // Quarterly stats - chỉ fetch khi không phải custom
-                if (filterBy !== 'custom') {
-                    promises.push(getQuarterlyStats().catch(e => ({ data: null })));
-                } else {
-                    promises.push(Promise.resolve({ data: null }));
-                }
-
-                // Top products - chỉ fetch khi có period hợp lệ
-                if (period !== 'custom') {
-                    promises.push(getTopProducts(10, period).catch(e => ({ data: [] })));
-                } else {
-                    promises.push(Promise.resolve({ data: [] }));
-                }
-
-                // Monthly performance - chỉ fetch khi filterBy === 'month'
-                if (filterBy === 'month') {
-                    promises.push(getMonthlyPerformance(selectedMonth, selectedYear).catch(e => ({ data: null })));
-                } else {
-                    promises.push(Promise.resolve({ data: null }));
-                }
-
-                // Add comparison if checkbox is checked
+                // Add comparison flag
                 if (compareWithPrevious) {
-                    if (filterBy === 'month') {
-                        promises.push(getMonthlyComparison().catch(e => ({ data: null })));
-                    } else if (filterBy === 'quarter') {
-                        promises.push(getQuarterlyComparison().catch(e => ({ data: null })));
+                    apiParams.compareWithPrevious = true;
+                }
+
+                // Fetch sales data from new API
+                const salesResponse = await getSalesByFilter(apiParams).catch(e => {
+                    console.error('Error fetching sales data:', e);
+                    return { data: { data: null } };
+                });
+
+                const salesDataResult = salesResponse?.data?.data;
+
+                if (salesDataResult) {
+                    setSalesData(salesDataResult);
+
+                    // Extract overview stats from currentPeriod
+                    if (salesDataResult.currentPeriod) {
+                        setOverviewStats({
+                            totalRevenue: salesDataResult.currentPeriod.totalRevenue || 0,
+                            totalOrders: salesDataResult.currentPeriod.totalOrders || 0,
+                            totalCancelledOrders: 0 // API mới không có field này, có thể lấy từ OrderStatusChart
+                        });
+                    }
+
+                    // Extract comparison data from summary
+                    if (salesDataResult.summary && compareWithPrevious) {
+                        setComparisonData({
+                            current: salesDataResult.summary.currentRevenue || 0,
+                            previous: salesDataResult.summary.previousRevenue || 0
+                        });
                     } else {
-                        promises.push(Promise.resolve({ data: null }));
+                        setComparisonData(null);
                     }
                 } else {
-                    promises.push(Promise.resolve({ data: null }));
-                }
-
-                const [overview, quarterly, products, monthly, comparison] = await Promise.all(promises);
-
-                // Chỉ set data nếu thực sự có data (không phải null/empty)
-                if (overview.data) {
-                    setOverviewStats(overview.data);
-                } else {
+                    setSalesData(null);
                     setOverviewStats(null);
-                }
-
-                if (comparison.data) {
-                    setComparisonData(comparison.data);
-                } else {
                     setComparisonData(null);
                 }
 
+                // Fetch other data (keep existing APIs for now)
+                const promises = [
+                    getOverviewStats().catch(e => ({ data: null })),
+                    getQuarterlyStats().catch(e => ({ data: null })),
+                    getTopProducts(10, filterBy === 'month' ? 'month' : filterBy === 'quarter' ? 'quarter' : 'year').catch(e => ({ data: [] })),
+                    filterBy === 'month' ? getMonthlyPerformance(selectedMonth, selectedYear).catch(e => ({ data: null })) : Promise.resolve({ data: null })
+                ];
+
+                const [overview, quarterly, products, monthly] = await Promise.all(promises);
+
+                // Set quarterly data
                 if (quarterly.data) {
                     setQuarterlyData(quarterly.data);
                 } else {
                     setQuarterlyData(null);
                 }
 
+                // Set top products
                 if (products.data && Array.isArray(products.data) && products.data.length > 0) {
                     setTopProducts(products.data);
                 } else {
                     setTopProducts([]);
                 }
 
+                // Set monthly performance
                 if (monthly.data) {
                     setMonthlyPerf(monthly.data);
                 } else {
                     setMonthlyPerf(null);
                 }
+
             } catch (error) {
                 console.error("Lỗi tải dữ liệu dashboard:", error);
                 // Reset all data khi có lỗi
+                setSalesData(null);
                 setOverviewStats(null);
                 setComparisonData(null);
                 setQuarterlyData(null);
@@ -172,7 +197,7 @@ const Dashboard = () => {
         };
 
         fetchAllData();
-    }, [filterBy, selectedMonth, selectedYear, fromDate, toDate, compareWithPrevious]);
+    }, [filterBy, selectedMonth, selectedYear, fromDate, toDate, compareWithPrevious, groupBy]);
 
     // Calculate percentage change
     const calculateChange = (current, previous) => {
@@ -187,21 +212,21 @@ const Dashboard = () => {
     // Format currency
     const formatCurrency = (value) => {
         if (!value && value !== 0) return '—';
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-            notation: 'compact',
-            maximumFractionDigits: 1
+        const formatted = new Intl.NumberFormat('vi-VN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
         }).format(value);
+        return formatted + ' VND';
     };
 
     // Format full currency
     const formatFullCurrency = (value) => {
         if (!value && value !== 0) return '—';
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
+        const formatted = new Intl.NumberFormat('vi-VN', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
         }).format(value);
+        return formatted + ' VND';
     };
 
     // Calculate success rate
@@ -262,13 +287,17 @@ const Dashboard = () => {
         return 'Khoảng thời gian đã chọn';
     };
 
-    // Calculate total revenue from overviewStats
-    const totalRevenue = overviewStats?.totalRevenue || 0;
-    const previousRevenue = comparisonData?.previous || 0;
-    const currentRevenue = comparisonData?.current || overviewStats?.totalRevenue || 0;
-    const revenueChangePercent = compareWithPrevious && previousRevenue > 0
-        ? (((currentRevenue - previousRevenue) / previousRevenue) * 100).toFixed(2)
-        : null;
+    // Calculate total revenue from salesData (new API) or overviewStats (fallback)
+    const totalRevenue = salesData?.currentPeriod?.totalRevenue || overviewStats?.totalRevenue || 0;
+    const previousRevenue = salesData?.summary?.previousRevenue || comparisonData?.previous || 0;
+    const currentRevenue = salesData?.summary?.currentRevenue || salesData?.currentPeriod?.totalRevenue || comparisonData?.current || overviewStats?.totalRevenue || 0;
+
+    // Use percentageChange from API summary if available
+    const revenueChangePercent = salesData?.summary?.percentageChange !== null && salesData?.summary?.percentageChange !== undefined
+        ? parseFloat(salesData.summary.percentageChange).toFixed(2)
+        : (compareWithPrevious && previousRevenue > 0
+            ? (((currentRevenue - previousRevenue) / previousRevenue) * 100).toFixed(2)
+            : null);
 
     return (
         <div className="dashboard-container">
@@ -430,109 +459,227 @@ const Dashboard = () => {
                 <>
                     {/* Navigation Tabs */}
                     <div className="dashboard-tabs">
-                        <button className="dashboard-tab active">Doanh thu tổng hợp</button>
-                        <button className="dashboard-tab">Hiệu suất khách sạn</button>
-                        <button className="dashboard-tab">Thống kê người dùng</button>
-                        <button className="dashboard-tab">Phân tích mùa vụ</button>
-                        <button className="dashboard-tab">Địa điểm phổ biến</button>
-                        <button className="dashboard-tab">Loại phòng phổ biến</button>
-                        <button className="dashboard-tab">Báo cáo tài chính</button>
+                        <button
+                            className={`dashboard-tab ${activeTab === 'revenue' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('revenue')}
+                        >
+                            Doanh thu tổng hợp
+                        </button>
+                        <button
+                            className={`dashboard-tab ${activeTab === 'orders' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('orders')}
+                        >
+                            Đơn hàng
+                        </button>
+                        <button
+                            className={`dashboard-tab ${activeTab === 'popular-orders' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('popular-orders')}
+                        >
+                            Đơn hàng phổ biến
+                        </button>
+                        <button
+                            className={`dashboard-tab ${activeTab === 'financial' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('financial')}
+                        >
+                            Báo cáo tài chính
+                        </button>
                     </div>
 
-                    {/* Revenue Summary Banner */}
-                    {overviewStats && (
-                        <div className="dashboard-revenue-banner">
-                            <div className="revenue-banner-left">
-                                <div className="revenue-banner-title">Tổng doanh thu (Tất cả khách sạn)</div>
-                                <div className="revenue-banner-value">{formatCurrency(totalRevenue)}</div>
-                                <div className="revenue-banner-period">Khoảng thời gian: {getPeriodDisplay()}</div>
-                            </div>
-                            {compareWithPrevious && revenueChangePercent !== null && (
-                                <div className="revenue-banner-right">
-                                    <div className="revenue-banner-title">Thay đổi so với kỳ trước</div>
-                                    <div className={`revenue-banner-change ${revenueChangePercent >= 0 ? 'positive' : 'negative'}`}>
-                                        {revenueChangePercent >= 0 ? '+' : ''}{revenueChangePercent}%
+                    {/* Tab Content: Doanh thu tổng hợp */}
+                    {activeTab === 'revenue' && (
+                        <>
+                            {/* Revenue Summary Banner - Hiển thị cả khi so sánh */}
+                            {overviewStats && (
+                                <div className="dashboard-revenue-banner">
+                                    <div className="revenue-banner-left">
+                                        <div className="revenue-banner-title">Tổng doanh thu</div>
+                                        <div className="revenue-banner-value">{formatCurrency(totalRevenue)}</div>
+                                        <div className="revenue-banner-period">Khoảng thời gian: {getPeriodDisplay()}</div>
+                                    </div>
+                                    {compareWithPrevious && revenueChangePercent !== null && (
+                                        <div className="revenue-banner-right">
+                                            <div className="revenue-banner-title">Thay đổi so với kỳ trước</div>
+                                            <div className={`revenue-banner-change ${revenueChangePercent >= 0 ? 'positive' : 'negative'}`}>
+                                                {revenueChangePercent >= 0 ? '+' : ''}{revenueChangePercent}%
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Revenue Chart - Luôn hiển thị, chuyển đổi khi so sánh */}
+                            {salesData && (
+                                <div className="dashboard-revenue-chart-section">
+                                    <div className="chart-widget revenue-chart-full">
+                                        <div className="chart-widget-header">
+                                            <h3 className="chart-title">Biểu đồ doanh thu tổng hợp</h3>
+                                            <div className="chart-actions">
+                                                <button title="Menu">
+                                                    <i className="fas fa-ellipsis-v"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="chart-widget-body">
+                                            <SalesChart
+                                                filterBy={filterBy}
+                                                selectedYear={selectedYear}
+                                                selectedMonth={selectedMonth}
+                                                fromDate={fromDate}
+                                                toDate={toDate}
+                                                groupBy={groupBy}
+                                                compareWithPrevious={compareWithPrevious}
+                                                fromDatePrevious={fromDatePrevious}
+                                                toDatePrevious={toDatePrevious}
+                                                salesData={salesData}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
+                            )}
+                        </>
+                    )}
+
+                    {/* Tab Content: Đơn hàng */}
+                    {activeTab === 'orders' && (
+                        <div className="dashboard-orders-section">
+                            <div className="chart-widget">
+                                <div className="chart-widget-header">
+                                    <h3 className="chart-title">Tình trạng Đơn hàng</h3>
+                                    <div className="chart-actions">
+                                        <button title="Cài đặt">
+                                            <i className="fas fa-cog"></i>
+                                        </button>
+                                        <button title="Danh sách">
+                                            <i className="fas fa-list"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="chart-widget-body">
+                                    <OrderStatusChart />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tab Content: Đơn hàng phổ biến */}
+                    {activeTab === 'popular-orders' && (
+                        <div className="dashboard-top-orders-section">
+                            <div className="chart-widget revenue-chart-full">
+                                <div className="chart-widget-header">
+                                    <h3 className="chart-title">Đơn hàng phổ biến</h3>
+                                    <div className="chart-actions">
+                                        <button title="Menu">
+                                            <i className="fas fa-ellipsis-v"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="chart-widget-body">
+                                    <TopOrdersChart
+                                        filterBy={filterBy}
+                                        selectedMonth={selectedMonth}
+                                        selectedYear={selectedYear}
+                                        fromDate={fromDate}
+                                        toDate={toDate}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tab Content: Báo cáo tài chính */}
+                    {activeTab === 'financial' && (
+                        <div className="dashboard-financial-section">
+                            {overviewStats && (
+                                <>
+                                    <div className="dashboard-revenue-banner">
+                                        <div className="revenue-banner-left">
+                                            <div className="revenue-banner-title">Tổng doanh thu</div>
+                                            <div className="revenue-banner-value">{formatCurrency(totalRevenue)}</div>
+                                            <div className="revenue-banner-period">Khoảng thời gian: {getPeriodDisplay()}</div>
+                                        </div>
+                                        {compareWithPrevious && revenueChangePercent !== null && (
+                                            <div className="revenue-banner-right">
+                                                <div className="revenue-banner-title">Thay đổi so với kỳ trước</div>
+                                                <div className={`revenue-banner-change ${revenueChangePercent >= 0 ? 'positive' : 'negative'}`}>
+                                                    {revenueChangePercent >= 0 ? '+' : ''}{revenueChangePercent}%
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Financial Summary Cards */}
+                                    <div className="dashboard-summary-cards">
+                                        <div className="summary-card revenue-card">
+                                            <div className="card-icon">
+                                                <i className="fas fa-dollar-sign"></i>
+                                            </div>
+                                            <div className="card-content">
+                                                <div className="card-title">Tổng Doanh thu</div>
+                                                <div className="card-value">
+                                                    {overviewStats.totalRevenue ? formatCurrency(overviewStats.totalRevenue) : '—'}
+                                                </div>
+                                                {compareWithPrevious && comparisonData && (
+                                                    <div className={`card-change ${revenueChange.isPositive ? 'positive' : 'negative'}`}>
+                                                        <span className="change-icon">{revenueChange.isPositive ? '▲' : '▼'}</span>
+                                                        <span>{revenueChange.value}% so với {getFilterLabel()} trước</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="summary-card orders-card">
+                                            <div className="card-icon">
+                                                <i className="fas fa-shopping-cart"></i>
+                                            </div>
+                                            <div className="card-content">
+                                                <div className="card-title">Tổng Đơn hàng</div>
+                                                <div className="card-value">
+                                                    {overviewStats.totalOrders || 0}
+                                                </div>
+                                                <div className="card-change positive">
+                                                    <span className="change-icon">▲</span>
+                                                    <span>Đơn hàng</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="summary-card success-card">
+                                            <div className="card-icon">
+                                                <i className="fas fa-check-circle"></i>
+                                            </div>
+                                            <div className="card-content">
+                                                <div className="card-title">Đơn thành công</div>
+                                                <div className="card-value">
+                                                    {overviewStats.totalOrders - (overviewStats.totalCancelledOrders || 0)}
+                                                </div>
+                                                <div className="card-change positive">
+                                                    <span className="change-icon">✓</span>
+                                                    <span>{successRate}% tỉ lệ thành công</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="summary-card cancelled-card">
+                                            <div className="card-icon">
+                                                <i className="fas fa-times-circle"></i>
+                                            </div>
+                                            <div className="card-content">
+                                                <div className="card-title">Đơn đã hủy</div>
+                                                <div className="card-value">
+                                                    {overviewStats.totalCancelledOrders || 0}
+                                                </div>
+                                                <div className="card-change negative">
+                                                    <span className="change-icon">▼</span>
+                                                    <span>Đơn hủy</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     )}
 
-                    {/* Main Summary Cards */}
-                    {overviewStats && (
-                        <div className="dashboard-summary-cards">
-                            <div className="summary-card revenue-card">
-                                <div className="card-icon">
-                                    <i className="fas fa-dollar-sign"></i>
-                                </div>
-                                <div className="card-content">
-                                    <div className="card-title">Tổng Doanh thu</div>
-                                    <div className="card-value">
-                                        {overviewStats.totalRevenue ? formatCurrency(overviewStats.totalRevenue) : '—'}
-                                    </div>
-                                    {compareWithPrevious && comparisonData && (
-                                        <div className={`card-change ${revenueChange.isPositive ? 'positive' : 'negative'}`}>
-                                            <span className="change-icon">{revenueChange.isPositive ? '▲' : '▼'}</span>
-                                            <span>{revenueChange.value}% so với {getFilterLabel()} trước</span>
-                                        </div>
-                                    )}
-                                    {!compareWithPrevious && (
-                                        <div className="card-change neutral">
-                                            <span>Doanh thu</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="summary-card orders-card">
-                                <div className="card-icon">
-                                    <i className="fas fa-shopping-cart"></i>
-                                </div>
-                                <div className="card-content">
-                                    <div className="card-title">Tổng Đơn hàng</div>
-                                    <div className="card-value">
-                                        {overviewStats.totalOrders || 0}
-                                    </div>
-                                    <div className="card-change positive">
-                                        <span className="change-icon">▲</span>
-                                        <span>Đơn hàng</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="summary-card success-card">
-                                <div className="card-icon">
-                                    <i className="fas fa-check-circle"></i>
-                                </div>
-                                <div className="card-content">
-                                    <div className="card-title">Đơn thành công</div>
-                                    <div className="card-value">
-                                        {overviewStats.totalOrders - (overviewStats.totalCancelledOrders || 0)}
-                                    </div>
-                                    <div className="card-change positive">
-                                        <span className="change-icon">✓</span>
-                                        <span>{successRate}% tỉ lệ thành công</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="summary-card cancelled-card">
-                                <div className="card-icon">
-                                    <i className="fas fa-times-circle"></i>
-                                </div>
-                                <div className="card-content">
-                                    <div className="card-title">Đơn đã hủy</div>
-                                    <div className="card-value">
-                                        {overviewStats.totalCancelledOrders || 0}
-                                    </div>
-                                    <div className="card-change negative">
-                                        <span className="change-icon">▼</span>
-                                        <span>Đơn hủy</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
                     {!overviewStats && !loading && (
                         <div className="dashboard-no-data">
@@ -540,52 +687,8 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {/* Revenue Chart - Full Width */}
-                    <div className="dashboard-revenue-chart-section">
-                        <div className="chart-widget revenue-chart-full">
-                            <div className="chart-widget-header">
-                                <h3 className="chart-title">Doanh thu & Đơn hàng</h3>
-                                <div className="chart-actions">
-                                    <button title="Menu">
-                                        <i className="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="chart-widget-body">
-                                <SalesChart
-                                    filterBy={filterBy}
-                                    selectedYear={selectedYear}
-                                    selectedMonth={selectedMonth}
-                                    fromDate={fromDate}
-                                    toDate={toDate}
-                                    groupBy={groupBy}
-                                    compareWithPrevious={compareWithPrevious}
-                                    fromDatePrevious={fromDatePrevious}
-                                    toDatePrevious={toDatePrevious}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Charts Row - Order Status & Other Charts */}
-                    <div className="dashboard-charts-section">
-                        <div className="chart-widget donut-chart-widget">
-                            <div className="chart-widget-header">
-                                <h3 className="chart-title">Tình trạng Đơn hàng</h3>
-                                <div className="chart-actions">
-                                    <button title="Cài đặt">
-                                        <i className="fas fa-cog"></i>
-                                    </button>
-                                    <button title="Danh sách">
-                                        <i className="fas fa-list"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="chart-widget-body">
-                                <OrderStatusChart />
-                            </div>
-                        </div>
-                    </div>
+
 
                     {/* Secondary Stats Row */}
                     <div className="dashboard-secondary-stats">

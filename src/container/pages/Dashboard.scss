@@ -127,6 +127,17 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    outline: none !important;
+
+    &:focus {
+        outline: none !important;
+        border: none !important;
+    }
+
+    &:active {
+        outline: none !important;
+        border: none !important;
+    }
 
     i {
         font-size: 16px;
@@ -176,6 +187,17 @@
     font-weight: 500;
     cursor: pointer;
     border-radius: 8px;
+    outline: none !important;
+
+    &:focus {
+        outline: none !important;
+        border: none !important;
+    }
+
+    &:active {
+        outline: none !important;
+        border: none !important;
+    }
     transition: all 0.2s;
     white-space: nowrap;
     text-align: center;
@@ -406,9 +428,14 @@
     }
 
     &:focus {
-        outline: none;
+        outline: none !important;
         border-color: #667eea;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    &:active {
+        outline: none !important;
+        border-color: #667eea;
     }
 
     option {
@@ -445,9 +472,14 @@
     }
 
     &:focus {
-        outline: none;
+        outline: none !important;
         border-color: #667eea;
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    &:active {
+        outline: none !important;
+        border-color: #667eea;
     }
 
     &::-webkit-calendar-picker-indicator {
@@ -488,6 +520,15 @@
         cursor: pointer;
         accent-color: #667eea;
         flex-shrink: 0;
+        outline: none !important;
+
+        &:focus {
+            outline: none !important;
+        }
+
+        &:active {
+            outline: none !important;
+        }
     }
 
     label {
@@ -528,8 +569,12 @@
     }
 
     &:focus {
-        outline: none;
+        outline: none !important;
         border-color: #667eea;
+    }
+
+    &:active {
+        outline: none !important;
     }
 }
 
@@ -846,8 +891,12 @@
             }
 
             &:focus {
-                outline: none;
+                outline: none !important;
                 border-color: #667eea;
+            }
+
+            &:active {
+                outline: none !important;
             }
         }
     }
@@ -1524,6 +1573,15 @@
                 cursor: pointer;
                 accent-color: #667eea;
                 flex-shrink: 0;
+                outline: none !important;
+
+                &:focus {
+                    outline: none !important;
+                }
+
+                &:active {
+                    outline: none !important;
+                }
             }
 
             label {
@@ -1536,6 +1594,173 @@
                 }
             }
         }
+    }
+}
+
+// ============================================
+// TOP ORDERS CHART
+// ============================================
+
+.top-orders-chart-container {
+    width: 100%;
+
+    .chart-controls {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        justify-content: flex-end;
+
+        .sort-btn {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+            outline: none !important;
+
+            &:hover {
+                background: #f9fafb;
+                border-color: #667eea;
+                color: #667eea;
+            }
+
+            &:focus {
+                outline: none !important;
+            }
+
+            &:active {
+                outline: none !important;
+            }
+
+            &.active {
+                background: #667eea;
+                border-color: #667eea;
+                color: #ffffff;
+            }
+        }
+    }
+
+    .chart-loading,
+    .chart-no-data {
+        text-align: center;
+        padding: 40px;
+        color: #6b7280;
+        font-size: 16px;
+    }
+
+    .top-orders-table {
+        margin-top: 24px;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e5e7eb;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+
+            thead {
+                background: #f9fafb;
+
+                th {
+                    padding: 16px;
+                    text-align: left;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #374151;
+                    border-bottom: 2px solid #e5e7eb;
+                    white-space: nowrap;
+                }
+            }
+
+            tbody {
+                tr {
+                    border-bottom: 1px solid #f3f4f6;
+                    transition: background-color 0.2s;
+
+                    &:hover {
+                        background: #f9fafb;
+                    }
+
+                    &:last-child {
+                        border-bottom: none;
+                    }
+
+                    td {
+                        padding: 16px;
+                        font-size: 14px;
+                        color: #6b7280;
+
+                        &:first-child {
+                            font-weight: 600;
+                            color: #111827;
+                        }
+                    }
+                }
+            }
+        }
+
+        .percentage-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 150px;
+
+            .percentage-value {
+                font-weight: 600;
+                color: #667eea;
+                min-width: 50px;
+            }
+
+            .percentage-bar {
+                flex: 1;
+                height: 8px;
+                background: #e5e7eb;
+                border-radius: 4px;
+                overflow: hidden;
+
+                .percentage-fill {
+                    height: 100%;
+                    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 4px;
+                    transition: width 0.3s ease;
+                }
+            }
+        }
+    }
+}
+
+// ============================================
+// GLOBAL FOCUS/ACTIVE STYLES - Tắt border màu đen
+// ============================================
+
+button,
+input,
+select,
+textarea {
+    &:focus {
+        outline: none !important;
+    }
+
+    &:active {
+        outline: none !important;
+    }
+}
+
+button {
+    &:focus {
+        outline: none !important;
+        border: none !important;
+    }
+
+    &:active {
+        outline: none !important;
+        border: none !important;
     }
 }
 

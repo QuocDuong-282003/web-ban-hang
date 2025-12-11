@@ -1,11 +1,25 @@
 // ============================================
-// PAY PAGE - BEAUTIFUL BALANCED CHECKOUT
+// PAY PAGE - NEW LAYOUT
 // ============================================
 
-.pay-page-container {
-    background: rgb(248, 242, 236); // Khớp với layout chung của website
+.pay-page-wrapper {
+    background: rgb(248, 242, 236);
     min-height: 100vh;
-    padding: 30px 0 50px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pay-page-container {
+    background: rgb(248, 242, 236);
+    flex: 1;
+    padding: 30px 50px 50px 50px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+
+    @media (max-width: 768px) {
+        padding: 30px 20px 50px 20px;
+    }
 }
 
 .pay-page-loading {
@@ -18,24 +32,24 @@
 }
 
 // ============================================
-// MAIN CONTENT LAYOUT - BALANCED
+// MAIN CONTENT LAYOUT
 // ============================================
 
 .pay-page-content {
     width: 100%;
-    margin: 0;
+    max-width: 100%;
+    margin: 0 auto;
     padding: 0;
 }
 
 .pay-page-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr; // Cân đối 50-50
-    gap: 24px;
+    display: flex;
+    gap: 0;
     margin-top: 24px;
     align-items: start;
 
     @media (max-width: 1200px) {
-        grid-template-columns: 1fr;
+        flex-direction: column;
         gap: 20px;
     }
 
@@ -46,7 +60,7 @@
 }
 
 // ============================================
-// LEFT PANEL - SHIPPING FORM
+// LEFT PANEL - SHIPPING FORM (Kéo dài đến đường kẻ đỏ)
 // ============================================
 
 .pay-page-form-section {
@@ -56,33 +70,19 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     border: 1px solid #e5e7eb;
     height: fit-content;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 68%; // Chiếm 68% width, kéo dài đến đường kẻ đỏ
+    margin-right: 24px; // Khoảng cách đến cột phải
+
+    @media (max-width: 1200px) {
+        flex: 1;
+        margin-right: 0;
+    }
 
     @media (max-width: 768px) {
         padding: 20px;
         border-radius: 10px;
-    }
-}
-
-.pay-page-header {
-    margin-bottom: 28px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #e5e7eb;
-
-    a {
-        text-decoration: none;
-        color: inherit;
-    }
-
-    h1 {
-        font-size: 28px;
-        font-weight: 700;
-        color: #667eea;
-        margin: 0;
-        letter-spacing: -0.5px;
-
-        @media (max-width: 768px) {
-            font-size: 24px;
-        }
     }
 }
 
@@ -92,7 +92,7 @@
     color: #111827;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #ef4444;
     display: inline-block;
 
     @media (max-width: 768px) {
@@ -302,7 +302,7 @@
 }
 
 // ============================================
-// RIGHT PANEL - ORDER SUMMARY
+// RIGHT PANEL - ORDER SUMMARY (Vị trí đường kẻ xanh)
 // ============================================
 
 .pay-page-summary-section {
@@ -314,8 +314,12 @@
     height: fit-content;
     position: sticky;
     top: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 32%; // Chiếm 32% width, ở vị trí đường kẻ xanh
 
     @media (max-width: 1200px) {
+        flex: 1;
         position: static;
     }
 
@@ -368,40 +372,45 @@
 
 .pay-page-summary-item {
     display: flex;
-    gap: 12px;
-    padding: 14px 0;
+    gap: 14px;
+    padding: 16px 0;
     border-bottom: 1px solid #f3f4f6;
-    align-items: flex-start;
+    align-items: center;
 
     &:last-child {
         border-bottom: none;
     }
 
     @media (max-width: 768px) {
-        gap: 10px;
-        padding: 12px 0;
+        gap: 12px;
+        padding: 14px 0;
+        align-items: flex-start;
     }
 }
 
 .pay-page-item-image {
     position: relative;
-    width: 70px;
-    height: 70px;
+    width: 80px;
+    height: 80px;
     flex-shrink: 0;
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid #e5e7eb;
     background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     @media (max-width: 768px) {
-        width: 60px;
-        height: 60px;
+        width: 70px;
+        height: 70px;
     }
 
     img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
     }
 
     .pay-page-item-quantity {
@@ -426,21 +435,26 @@
 .pay-page-item-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
     h5 {
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
         color: #111827;
-        margin: 0 0 4px 0;
+        margin: 0 0 6px 0;
         line-height: 1.4;
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
 
         @media (max-width: 768px) {
-            font-size: 13px;
+            font-size: 14px;
+            margin-bottom: 4px;
         }
     }
 
@@ -453,14 +467,17 @@
 }
 
 .pay-page-item-price {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: #111827;
     white-space: nowrap;
     flex-shrink: 0;
+    text-align: right;
+    min-width: 100px;
 
     @media (max-width: 768px) {
-        font-size: 14px;
+        font-size: 15px;
+        min-width: 80px;
     }
 }
 
@@ -513,34 +530,5 @@
         @media (max-width: 768px) {
             font-size: 20px;
         }
-    }
-}
-
-// ============================================
-// RESPONSIVE
-// ============================================
-
-@media (max-width: 1200px) {
-    .pay-page-row {
-        grid-template-columns: 1fr;
-    }
-
-    .pay-page-summary-section {
-        order: -1;
-    }
-}
-
-@media (max-width: 768px) {
-    .pay-page-container {
-        padding: 16px 0 40px 0;
-    }
-
-    .pay-page-content {
-        padding: 0 16px;
-    }
-
-    .pay-page-form-section,
-    .pay-page-summary-section {
-        padding: 18px;
     }
 }

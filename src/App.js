@@ -35,7 +35,7 @@ import ListCategory from './container/pages/templates/ListCategory';
 import Extra from './container/pages/templates/Extra';
 import Review from './container/pages/templates/Review';
 import ContactTable from './container/pages/templates/ContactTable';
-import Maps from './container/pages/templates/Maps';
+import Payment from './container/pages/templates/Payment';
 import ProductTable from './container/pages/templates/ProductTable';
 import DiscountTables from './container/pages/templates/DiscountTable';
 import News from './container/pages/templates/News';
@@ -145,7 +145,8 @@ function AppContent() {
                     <Route path="template-extra" element={<Extra />} />
                     <Route path="template-forms" element={<Review />} />
                     <Route path="template-contact" element={<ContactTable />} />
-                    <Route path="template-maps" element={<Maps />} />
+                    <Route path="template-payment" element={<Payment />} />
+                    <Route path="template-Payment" element={<Payment />} />
                     <Route path="template-product-tables" element={<ProductTable />} />
                     <Route path="template-discount" element={<DiscountTables />} />
                 </Route>

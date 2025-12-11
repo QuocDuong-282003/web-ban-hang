@@ -186,7 +186,7 @@ function PayPage() {
     }
 
     return (
-        <div>
+        <div className="pay-page-wrapper">
             <div className={`overlay ${isMobileMenuOpen ? '' : 'hidden'}`} onClick={toggleMobileMenu}></div>
             <MobileMenu isOpen={isMobileMenuOpen} toggleMenu={toggleMobileMenu} />
             <Header />
@@ -197,11 +197,6 @@ function PayPage() {
                             <div className="pay-page-row">
                                 {/* Left Panel - Shipping Form */}
                                 <div className="pay-page-form-section">
-                                    <div className="pay-page-header">
-                                        <Link to="/">
-                                            <h1>P&T SHOP</h1>
-                                        </Link>
-                                    </div>
 
                                     <div className="pay-page-section-title">
                                         Thông tin giao hàng

@@ -25,7 +25,7 @@ import {
     Description,
     BarChart,
     ViewComfy,
-    Map,
+    Payment,
     Star,
 } from '@mui/icons-material';
 
@@ -140,7 +140,7 @@ const Sidebar = ({ isOpen }) => { // Receive isOpen as a prop
                     <SidebarItem label="Reviews" icon={<Description />} to={path.TEMPLATE_FORMS} />
                     <SidebarItem label="News" icon={<BarChart />} to={path.TEMPLATE_NEWS} />
                     <SidebarItem label="Contact" icon={<ViewComfy />} to={path.TEMPLATE_CONTACT} />
-                    <SidebarItem label="Maps" icon={<Map />} to={path.TEMPLATE_MAPS} />
+                    <SidebarItem label="Payment" icon={<Payment />} to={path.TEMPLATE_PAYMENT} />
                     <SidebarItem label="Extra" icon={<Star />} to={path.TEMPLATE_EXTRA} />
                 </List>
             </Box>

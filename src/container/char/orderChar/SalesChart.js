@@ -11,7 +11,6 @@ import {
     Tooltip, 
     Legend 
 } from 'chart.js';
-import { getSalesStats } from '../../services/dashboardService';
 
 ChartJS.register(
     CategoryScale, 
@@ -33,101 +32,166 @@ const SalesChart = ({
     groupBy,
     compareWithPrevious,
     fromDatePrevious,
-    toDatePrevious
+    toDatePrevious,
+    salesData // Data from new API
 }) => {
     const [chartData, setChartData] = useState(null);
-    const [period, setPeriod] = useState('day');
     const [isLoading, setIsLoading] = useState(true);
     const [hasData, setHasData] = useState(false);
 
     useEffect(() => {
-        const fetchChartData = async () => {
-            setIsLoading(true);
-            setHasData(false);
-            
-            try {
-                // Determine period based on filterBy
-                let periodToFetch = period;
-                if (filterBy === 'custom') {
-                    periodToFetch = groupBy || 'day';
-                } else if (filterBy === 'month') {
-                    periodToFetch = 'day'; // Show daily data for selected month
-                } else if (filterBy === 'quarter') {
-                    periodToFetch = 'quarter'; // Show quarterly data
-                } else if (filterBy === 'year') {
-                    periodToFetch = 'month'; // Show monthly data for year
-                }
-
-                // Build params for current period
-                const currentParams = {};
-                if (filterBy === 'custom' && fromDate && toDate) {
-                    currentParams.fromDate = fromDate;
-                    currentParams.toDate = toDate;
-                } else if (filterBy === 'month' && selectedMonth && selectedYear) {
-                    currentParams.month = selectedMonth;
-                    currentParams.year = selectedYear;
-                } else if (filterBy === 'year' && selectedYear) {
-                    currentParams.year = selectedYear;
-                }
-
-                // Fetch current period data
-                const currentResponse = await getSalesStats(periodToFetch, currentParams);
-                const currentData = currentResponse?.data;
-
-                // CHỈ fetch previous period data KHI compareWithPrevious = true
-                let previousData = null;
-                if (compareWithPrevious) {
-                    // Nếu có fromDatePrevious và toDatePrevious, dùng chúng
-                    if (fromDatePrevious && toDatePrevious) {
-                        try {
-                            const prevParams = {
-                                fromDate: fromDatePrevious,
-                                toDate: toDatePrevious
-                            };
-                            const prevResponse = await getSalesStats(periodToFetch, prevParams);
-                            previousData = prevResponse?.data;
-                        } catch (error) {
-                            console.warn('Không thể tải dữ liệu kỳ trước:', error);
-                        }
-                    }
-                }
-
-                // Validate and combine data
-                if (currentData && currentData.labels && Array.isArray(currentData.labels) && 
-                    currentData.datasets && Array.isArray(currentData.datasets) && currentData.datasets.length > 0) {
+        setIsLoading(true);
+        setHasData(false);
+        
+        try {
+            // Use data from new API if available
+            if (salesData && salesData.currentPeriod) {
+                const currentPeriod = salesData.currentPeriod;
+                const previousPeriod = salesData.previousPeriod;
+                
+                // Check if we have valid data
+                if (currentPeriod.labels && Array.isArray(currentPeriod.labels) && 
+                    currentPeriod.datasets && Array.isArray(currentPeriod.datasets) && 
+                    currentPeriod.datasets.length > 0) {
                     
                     const datasets = [];
                     
-                    // Add current period dataset (LUÔN hiển thị)
-                    if (currentData.datasets[0]) {
-                        datasets.push({
-                            ...currentData.datasets[0],
-                            label: 'Kỳ hiện tại',
-                            backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                            borderColor: 'rgba(102, 126, 234, 1)',
-                            borderWidth: 1
+                    // Process chartData to filter out points with no data
+                    // Khi so sánh: hiển thị tất cả labels từ cả 2 kỳ, map theo ngày trong tháng
+                    let validDataPoints = [];
+                    let filteredLabels = [];
+                    
+                    if (compareWithPrevious && previousPeriod && previousPeriod.chartData && previousPeriod.chartData.length > 0) {
+                        // So sánh: API đã align data theo index, chỉ cần map theo index
+                        const chartDataWithValues = currentPeriod.chartData || [];
+                        const prevChartDataWithValues = previousPeriod.chartData || [];
+                        const currentLabels = currentPeriod.labels || [];
+                        const prevLabels = previousPeriod.labels || [];
+                        
+                        // Lấy max length để cover cả 2 kỳ
+                        const maxLength = Math.max(chartDataWithValues.length, prevChartDataWithValues.length, currentLabels.length, prevLabels.length);
+                        
+                        for (let i = 0; i < maxLength; i++) {
+                            const currentItem = chartDataWithValues[i];
+                            const prevItem = prevChartDataWithValues[i];
+                            
+                            const currentHasData = currentItem && (
+                                (currentItem.revenue && currentItem.revenue > 0) || 
+                                (currentItem.orders && currentItem.orders > 0)
+                            );
+                            
+                            const prevHasData = prevItem && (
+                                (prevItem.revenue && prevItem.revenue > 0) || 
+                                (prevItem.orders && prevItem.orders > 0)
+                            );
+                            
+                            // Include if either period has data
+                            if (currentHasData || prevHasData) {
+                                // Use current label if available, otherwise use previous label
+                                const label = currentLabels[i] || prevLabels[i] || (currentItem?.label || currentItem?.date) || (prevItem?.label || prevItem?.date) || `Day ${i + 1}`;
+                                
+                                validDataPoints.push({
+                                    currentIndex: i < chartDataWithValues.length ? i : -1,
+                                    previousIndex: i < prevChartDataWithValues.length ? i : -1,
+                                    label: label
+                                });
+                            }
+                        }
+                        
+                        filteredLabels = validDataPoints.map(dp => dp.label).filter(Boolean);
+                    } else {
+                        // Không so sánh: Chỉ lọc current period
+                        const chartDataWithValues = currentPeriod.chartData || [];
+                        chartDataWithValues.forEach((currentItem, currentIdx) => {
+                            const currentHasData = currentItem && (
+                                (currentItem.revenue && currentItem.revenue > 0) || 
+                                (currentItem.orders && currentItem.orders > 0)
+                            );
+                            
+                            if (currentHasData) {
+                                validDataPoints.push({
+                                    currentIndex: currentIdx,
+                                    previousIndex: -1,
+                                    label: currentPeriod.labels[currentIdx]
+                                });
+                            }
                         });
+                        
+                        filteredLabels = validDataPoints.map(dp => dp.label).filter(Boolean);
                     }
                     
-                    // CHỈ thêm previous period dataset KHI compareWithPrevious = true VÀ có data
-                    if (compareWithPrevious && previousData && previousData.datasets && previousData.datasets[0]) {
-                        datasets.push({
-                            ...previousData.datasets[0],
-                            label: 'Kỳ trước',
-                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                            borderColor: 'rgba(16, 185, 129, 1)',
-                            borderWidth: 1
+                    // Khi so sánh: hiển thị bar chart cho cả 2 kỳ
+                    // Khi không so sánh: hiển thị line + bar như cũ
+                    if (compareWithPrevious && previousPeriod) {
+                        // So sánh: Bar chart cho cả 2 kỳ (chỉ doanh thu)
+                        // Current period - Bar màu xanh dương
+                        const currentRevenueDataset = currentPeriod.datasets.find(d => d.yAxisID === 'y_revenue') || currentPeriod.datasets[0];
+                        if (currentRevenueDataset) {
+                            const filteredData = validDataPoints.map(dp => {
+                                if (dp.currentIndex >= 0 && dp.currentIndex < currentRevenueDataset.data.length) {
+                                    return currentRevenueDataset.data[dp.currentIndex] || 0;
+                                }
+                                return 0;
+                            });
+                            datasets.push({
+                                type: 'bar',
+                                label: 'Kỳ hiện tại',
+                                data: filteredData,
+                                backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                                borderColor: 'rgb(75, 192, 192)',
+                                borderWidth: 1,
+                                yAxisID: 'y_revenue'
+                            });
+                        }
+                        
+                        // Previous period - Bar màu xanh lá
+                        const prevRevenueDataset = previousPeriod.datasets.find(d => d.yAxisID === 'y_revenue') || previousPeriod.datasets[0];
+                        if (prevRevenueDataset) {
+                            const filteredData = validDataPoints.map(dp => {
+                                if (dp.previousIndex >= 0 && dp.previousIndex < prevRevenueDataset.data.length) {
+                                    return prevRevenueDataset.data[dp.previousIndex] || 0;
+                                }
+                                return 0;
+                            });
+                            datasets.push({
+                                type: 'bar',
+                                label: 'Kỳ trước',
+                                data: filteredData,
+                                backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                                borderColor: 'rgb(34, 197, 94)',
+                                borderWidth: 1,
+                                yAxisID: 'y_revenue'
+                            });
+                        }
+                    } else {
+                        // Không so sánh: Giữ nguyên line + bar như cũ
+                        currentPeriod.datasets.forEach((dataset, index) => {
+                            // Filter data to only include valid data points
+                            const filteredData = validDataPoints.map(dp => {
+                                if (dp.currentIndex >= 0 && dp.currentIndex < dataset.data.length) {
+                                    return dataset.data[dp.currentIndex] || 0;
+                                }
+                                return 0;
+                            });
+                            
+                            datasets.push({
+                                ...dataset,
+                                data: filteredData,
+                                // Keep original colors from API or use defaults
+                                borderColor: dataset.borderColor || (index === 0 ? 'rgb(75, 192, 192)' : 'rgba(255, 159, 64, 0.7)'),
+                                backgroundColor: dataset.backgroundColor || (index === 0 ? 'rgba(75, 192, 192, 0.5)' : 'rgba(255, 159, 64, 0.7)')
+                            });
                         });
                     }
 
                     // Check if there's actual data (not all zeros)
                     const hasActualData = datasets.some(dataset => 
-                        dataset.data && dataset.data.some(value => value > 0)
+                        dataset.data && Array.isArray(dataset.data) && dataset.data.some(value => value > 0)
                     );
 
-                    if (hasActualData && datasets.length > 0) {
+                    if (hasActualData && datasets.length > 0 && filteredLabels.length > 0) {
                         setChartData({
-                            labels: currentData.labels,
+                            labels: filteredLabels,
                             datasets: datasets
                         });
                         setHasData(true);
@@ -139,22 +203,26 @@ const SalesChart = ({
                     setChartData(null);
                     setHasData(false);
                 }
-            } catch (error) {
-                console.error(`Lỗi tải dữ liệu doanh thu:`, error);
+            } else {
                 setChartData(null);
                 setHasData(false);
-            } finally {
-                setIsLoading(false);
             }
-        };
-
-        fetchChartData();
-    }, [filterBy, selectedYear, selectedMonth, fromDate, toDate, groupBy, period, compareWithPrevious, fromDatePrevious, toDatePrevious]);
+        } catch (error) {
+            console.error(`Lỗi xử lý dữ liệu biểu đồ:`, error);
+            setChartData(null);
+            setHasData(false);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [salesData, compareWithPrevious]);
 
     const options = {
-        // BỎ indexAxis để biểu đồ dọc (vertical bar chart)
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+            mode: 'index',
+            intersect: false,
+        },
         layout: {
             padding: {
                 left: 10,
@@ -170,25 +238,34 @@ const SalesChart = ({
             },
             title: {
                 display: true,
-                text: 'Biểu đồ doanh thu tổng hợp'
+                text: salesData?.currentPeriod?.label || 'Biểu đồ doanh thu & đơn hàng'
             },
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        const value = context.parsed.y || 0; // Với vertical bar, giá trị ở trục y
-                        return `${context.dataset.label}: ${new Intl.NumberFormat('vi-VN', {
-                            style: 'currency',
-                            currency: 'VND',
-                            notation: 'compact',
-                            maximumFractionDigits: 1
-                        }).format(value)}`;
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            // Check if this is revenue (yAxisID === 'y_revenue') or orders
+                            if (context.dataset.yAxisID === 'y_revenue') {
+                                label += new Intl.NumberFormat('vi-VN', {
+                                    style: 'currency',
+                                    currency: 'VND'
+                                }).format(context.parsed.y);
+                            } else {
+                                label += context.parsed.y + ' đơn';
+                            }
+                        }
+                        return label;
                     }
                 }
             }
         },
         scales: {
             x: {
-                type: 'category', // X-axis là category cho thời gian (ngang)
+                type: 'category',
                 position: 'bottom',
                 title: {
                     display: true,
@@ -198,25 +275,36 @@ const SalesChart = ({
                     display: false
                 }
             },
-            y: {
-                type: 'linear', // Y-axis là linear cho doanh thu (dọc)
+            y_revenue: {
+                type: 'linear',
+                display: true,
                 position: 'left',
                 beginAtZero: true,
-                title: { 
-                    display: true, 
-                    text: 'Doanh thu (VND)' 
+                title: {
+                    display: true,
+                    text: 'Doanh thu (VND)'
                 },
                 ticks: {
                     callback: function(value) {
-                        if (value >= 1000000) {
-                            return (value / 1000000).toFixed(1) + ' triệu';
-                        }
-                        return value.toLocaleString('vi-VN');
+                        return new Intl.NumberFormat('vi-VN').format(value) + ' đ';
                     }
                 },
                 grid: {
                     display: true,
                     color: 'rgba(0, 0, 0, 0.05)'
+                }
+            },
+            y_orders: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Số đơn hàng'
+                },
+                grid: {
+                    drawOnChartArea: false // Don't draw grid for right axis
                 }
             }
         }
@@ -224,20 +312,6 @@ const SalesChart = ({
 
     return (
         <div className="chart-container">
-            <div className="chart-filters">
-                <button 
-                    onClick={() => setPeriod('day')} 
-                    className={period === 'day' ? 'active' : ''}
-                >
-                    Theo Ngày
-                </button>
-                <button 
-                    onClick={() => setPeriod('month')} 
-                    className={period === 'month' ? 'active' : ''}
-                >
-                    Theo Tháng
-                </button>
-            </div>
             <div className="chart-wrapper">
                 {isLoading && <p>Đang tải biểu đồ...</p>}
 

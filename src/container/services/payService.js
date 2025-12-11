@@ -17,3 +17,8 @@ export const createMomoAioPaymentUrl = (paymentData) => {
     // Gọi đến đúng endpoint AIO trên backend
     return API.post('/momo/create-aio', paymentData);
 };
+
+// Lấy danh sách giao dịch thanh toán
+export const getPaymentTransactions = (params = {}) => {
+    return API.get('/payments/transactions', { params });
+};

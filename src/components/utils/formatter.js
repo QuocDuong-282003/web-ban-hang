@@ -2,14 +2,16 @@
 export const formatCurrency = (number) => {
 
     if (typeof number !== 'number' || isNaN(number)) {
-        return '0 ₫'; // Trả về giá trị mặc định an toàn
+        return '0 VND'; // Trả về giá trị mặc định an toàn
     }
 
-    // Sử dụng Intl.NumberFormat để định dạng
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
+    // Format số với dấu chấm phân cách hàng nghìn
+    const formatted = new Intl.NumberFormat('vi-VN', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
     }).format(number);
+
+    return formatted + ' VND';
 };
 
 export const formatDate = (dateString) => {

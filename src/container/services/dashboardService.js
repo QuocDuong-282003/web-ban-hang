@@ -71,3 +71,61 @@ export const getQuarterlyStats = () => {
 export const getMonthlyPerformance = (month, year) => {
     return API.get('/stats/monthly-performance', { params: { month, year } });
 };
+
+// ============ THỐNG KÊ DOANH THU THEO FILTER (API MỚI) ============
+// Dựa trên API documentation: /api/stats/sales-by-filter
+// Params:
+//   - filterType: 'day', 'month', 'quarter', 'year', 'custom'
+//   - month: 1-12 (khi filterType='month')
+//   - year: 2000-2100 (khi filterType='month', 'quarter', 'year')
+//   - fromDate: 'DD/MM/YYYY' hoặc 'YYYY-MM-DD' (khi filterType='custom')
+//   - toDate: 'DD/MM/YYYY' hoặc 'YYYY-MM-DD' (khi filterType='custom')
+//   - groupBy: 'day', 'week', 'month', 'quarter'
+//   - compareWithPrevious: true/false hoặc 'true'/'false'
+export const getSalesByFilter = (params = {}) => {
+    // Convert date format from YYYY-MM-DD to DD/MM/YYYY if needed
+    const processedParams = { ...params };
+    
+    if (processedParams.fromDate && processedParams.fromDate.includes('-')) {
+        const [year, month, day] = processedParams.fromDate.split('-');
+        processedParams.fromDate = `${day}/${month}/${year}`;
+    }
+    
+    if (processedParams.toDate && processedParams.toDate.includes('-')) {
+        const [year, month, day] = processedParams.toDate.split('-');
+        processedParams.toDate = `${day}/${month}/${year}`;
+    }
+    
+    // Convert boolean to string if needed
+    if (typeof processedParams.compareWithPrevious === 'boolean') {
+        processedParams.compareWithPrevious = processedParams.compareWithPrevious ? 'true' : 'false';
+    }
+    
+    return API.get('/stats/sales-by-filter', { params: processedParams });
+};
+
+// ============ ĐƠN HÀNG PHỔ BIẾN NHẤT ============
+// limit: số lượng đơn hàng (mặc định 10, tối đa 50)
+// sortBy: 'value' (theo giá trị) hoặc 'items' (theo số lượng sản phẩm)
+// status: trạng thái đơn hàng (mặc định 'delivered')
+// fromDate, toDate: khoảng thời gian (format: 'YYYY-MM-DD' hoặc 'DD/MM/YYYY')
+export const getTopOrders = (limit = 10, sortBy = 'value', status = 'delivered', fromDate = null, toDate = null) => {
+    const params = { limit, sortBy, status };
+    
+    // Convert date format from YYYY-MM-DD to DD/MM/YYYY if needed
+    if (fromDate && fromDate.includes('-')) {
+        const [year, month, day] = fromDate.split('-');
+        params.fromDate = `${day}/${month}/${year}`;
+    } else if (fromDate) {
+        params.fromDate = fromDate;
+    }
+    
+    if (toDate && toDate.includes('-')) {
+        const [year, month, day] = toDate.split('-');
+        params.toDate = `${day}/${month}/${year}`;
+    } else if (toDate) {
+        params.toDate = toDate;
+    }
+    
+    return API.get('/stats/top-orders', { params });
+};
